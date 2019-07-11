@@ -18,12 +18,11 @@
 #include <fstream>
 #include <iostream>
 
-#include "ttfsession.h"
+#include "../../Core/Interface/ttfsession.h"
 
 
 int main(int argc, char *argv[])
 {
-
     QCoreApplication a(argc, argv);
 
     TTfSession MNISTsession;
@@ -34,32 +33,44 @@ int main(int argc, char *argv[])
 
     MNISTsession.LoadModel(PathMNIST, "InceptionV3/Predictions/Reshape_1", "input", 299, 299);
 
-    /*std::vector<tensorflow::Tensor> resized_tensors;
-    std::string ImagePath = "/home/alexab/Try2/cat.jpg";
+    /*unsigned char Array[400*400*3];
 
-    tensorflow::Status read_tensor_status = ReadTensorFromImageFile(ImagePath, 299, 299, 0, 255, &resized_tensors);
-
-
-    if (!read_tensor_status.ok())
+    for(int i=0; i< 400*400*3; i++)
     {
-      LOG(ERROR) << read_tensor_status;
-      return -1;
+        Array[i] = rand()%255;
     }
+
+    MNISTsession.SetInputRawImg(Array,400,400,3);
     */
 
-    MNISTsession.SetInputImg("/home/alexab/Try2/cat.jpg");
+    std::string PathToImage = "/home/alexab/Try2/grace_hopper.jpg";
+
+    cv::Mat img=cv::imread(PathToImage, 1);
+
+    //MNISTsession.SetInputCvMat(img);
+
+    MNISTsession.SetInputCvMatNew(img);
 
     MNISTsession.Run();
 
     auto Result1 = MNISTsession.GetOutput();
 
     string labels = "/home/alexab/Try2/imagenet_slim_labels.txt";
-
     tensorflow::Status print_status = PrintTopLabels(Result1, labels);
 
     tensorflow::Tensor A = MNISTsession.GetInputTensor();
 
-    std::cout << A.tensor<float, 4>().data()[5] <<std::endl;
+    cv::Mat image = MNISTsession.TensorToMat(A);
+
+    if(cv::imwrite("/home/alexab/newImage.jpg", image))
+    {
+        std::cout << "GJ" <<std::endl;
+    }
+    else
+    {
+        std::cout << "NO" <<std::endl;
+    }
+    //std::cout << A.shape() <<std::endl;
 
     return a.exec();
 }

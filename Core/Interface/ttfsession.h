@@ -15,6 +15,8 @@
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/cc/client/client_session.h"
 
+#include <opencv2/opencv.hpp>
+#include "opencv2/highgui/highgui.hpp"
 
 #include "label_image.h"
 
@@ -57,7 +59,13 @@ public:
 
     void SetInputImg(const std::string &image_path);
 
+    void SetInputCvMat(cv::Mat& image);
+
+    void SetInputCvMatNew(cv::Mat& image);
+
     void SetInputRawImg(unsigned char* data, int width, int height, int channels_num);
+
+    cv::Mat TensorToMat(tensorflow::Tensor& tensor);
 
     void Run(void);
 
