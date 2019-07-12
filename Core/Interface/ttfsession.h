@@ -48,25 +48,35 @@ public:
 
     virtual ~TTfSession(void);
 
+    ///Инициализация сессии
     void Init(void);
 
+    ///Деинициализация сессии
     void UnInit(void);
 
+    ///Загрузка модели графа в сессию
     int LoadModel(const std::string &file_name, const std::string &output_name, const std::string &input_name,
                   const int &img_height, const int &img_width);
 
+    ///Загрузка входного тенсора
     void SetInputTensor(const tensorflow::Tensor &input_tensor);
 
+    ///Загрузка входного тенсора из изображения
     void SetInputImg(const std::string &image_path);
 
+    ///Загрузка входного тенсора из объекта Mat, используя tensorflow
     void SetInputCvMat(cv::Mat& image);
 
+    ///Загрузка входного тенсора из объекта Mat, используя opencv
     void SetInputCvMatNew(cv::Mat& image);
 
+    ///Загрузка входного тенсора из сырых данных
     void SetInputRawImg(unsigned char* data, int width, int height, int channels_num);
 
+    ///Преобразование тенсора в Mat
     cv::Mat TensorToMat(tensorflow::Tensor& tensor);
 
+    ///Запуск сессии, сохранение результата в Output
     void Run(void);
 
     const std::vector<tensorflow::Tensor>& GetOutput(void);

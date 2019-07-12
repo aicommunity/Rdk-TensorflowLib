@@ -1,8 +1,6 @@
 #ifndef LABEL_IMAGE_H
 #define LABEL_IMAGE_H
 
-#endif // LABEL_IMAGE_H
-
 /* Copyright 2015 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -281,3 +279,5 @@ static Status CheckTopLabel(const std::vector<Tensor>& outputs, int expected,boo
   }
   return Status::OK();
 }
+
+#endif // LABEL_IMAGE_H

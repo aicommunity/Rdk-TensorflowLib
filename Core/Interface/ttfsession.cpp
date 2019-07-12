@@ -8,13 +8,22 @@ TTfSession::TTfSession(void)
 
 TTfSession::~TTfSession(void)
 {
-
+    UnInit();
 }
 
 void TTfSession::Init(void)
 {
     Status = tensorflow::NewSession(tensorflow::SessionOptions(), &Session);
 
+    if (!Status.ok())
+    {
+        std::cout << Status.ToString() << "\n";
+    }
+}
+
+void TTfSession::UnInit(void)
+{
+    Status = Session->Close();
     if (!Status.ok())
     {
         std::cout << Status.ToString() << "\n";
@@ -214,15 +223,6 @@ const tensorflow::Status &TTfSession::GetStatus(void)
     return Status;
 }
 
-void TTfSession::UnInit(void)
-{
-    Status = Session->Close();
-    if (!Status.ok())
-    {
-        std::cout << Status.ToString() << "\n";
-    }
-}
-
 const tensorflow::Tensor &TTfSession::GetInputTensor(void)
 {
     return Input[0].second;
@@ -230,7 +230,7 @@ const tensorflow::Tensor &TTfSession::GetInputTensor(void)
 
 cv::Mat TTfSession::TensorToMat(tensorflow::Tensor& tensor)
 {
-    cv::Mat image(ImgHeight, ImgWidght, CV_32FC3);
+    cv::Mat image(tensor.shape().dim_size(1), tensor.shape().dim_size(2), CV_32FC3);
 
     tensorflow::StringPiece tmp_data = tensor.tensor_data();
 
@@ -241,6 +241,6 @@ cv::Mat TTfSession::TensorToMat(tensorflow::Tensor& tensor)
     temp = image*(255.f);
 
     temp.convertTo(image, CV_8UC3);
-
+    cv::cvtColor(image, image, CV_BGR2RGB);
     return image;
 }

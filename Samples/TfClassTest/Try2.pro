@@ -22,24 +22,23 @@ SOURCES += \
 target.path = $$PWD/../../Bin
 !isEmpty(target.path): INSTALLS += target
 
-TENSORFLOW_PATH = /home/alexab/tensorflow3
 
-INCLUDEPATH +=/home/alexab/tensorflow3
-INCLUDEPATH +=/home/alexab/tensorflow3/bazel-tensorflow3/external/eigen_archive
-INCLUDEPATH +=/home/alexab/tensorflow3/bazel-tensorflow3/external/protobuf_archive/src
-INCLUDEPATH +=/home/alexab/tensorflow3/bazel-genfiles
+INCLUDEPATH += $$(TENSORFLOW_PATH)
+INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow3/external/eigen_archive
+INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow3/external/protobuf_archive/src
+INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-genfiles
 
-INCLUDEPATH +=/home/alexab/abseil-cpp
+INCLUDEPATH += $$(ABSEIL_PATH)
 
-unix:!macx: LIBS += -L/home/alexab/tensorflow3/bazel-bin/tensorflow/ -ltensorflow_cc
+unix:!macx: LIBS += -L $$(TENSORFLOW_PATH)/bazel-bin/tensorflow/ -ltensorflow_cc
 
-INCLUDEPATH += /home/alexab/tensorflow3/bazel-bin/tensorflow
-DEPENDPATH += /home/alexab/tensorflow3/bazel-bin/tensorflow
+INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
+DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 
-unix:!macx: LIBS += -L/home/alexab/tensorflow3/bazel-bin/tensorflow/ -ltensorflow_framework
+unix:!macx: LIBS += -L $$(TENSORFLOW_PATH)/bazel-bin/tensorflow/ -ltensorflow_framework
 
-INCLUDEPATH += /home/alexab/tensorflow3/bazel-bin/tensorflow
-DEPENDPATH += /home/alexab/tensorflow3/bazel-bin/tensorflow
+INCLUDEPATH += $$(TENSORFLOW_PATH)
+DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 
 HEADERS += \
     ../../Core/Interface/label_image.h \
