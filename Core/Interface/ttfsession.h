@@ -14,11 +14,20 @@
 #include "tensorflow/core/platform/types.h"
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/cc/client/client_session.h"
+#include "tensorflow/core/protobuf/meta_graph.pb.h"
 
 #include <opencv2/opencv.hpp>
 #include "opencv2/highgui/highgui.hpp"
 
 #include "label_image.h"
+
+
+enum ExtraChange
+{
+    NO_NEED,
+    CAST_CHAR_TO_FLOAT,
+    NORMALIZE,
+};
 
 class TTfSession
 {
@@ -34,7 +43,9 @@ protected:
 
     tensorflow::GraphDef GraphDef;
 
-    std::string OutputName;
+    tensorflow::MetaGraphDef MetaGraphDef;
+
+    std::vector<std::string> OutputName;
 
     std::string InputName;
 
@@ -54,9 +65,20 @@ public:
     ///Деинициализация сессии
     void UnInit(void);
 
-    ///Загрузка модели графа в сессию
-    int LoadModel(const std::string &file_name, const std::string &output_name, const std::string &input_name,
-                  const int &img_height, const int &img_width);
+    ///Загрузка замороженной модели графа в сессию с указанием размера входного изображения
+    int LoadPbModel(const std::string &file_name, const std::vector<std::string> &output_name, const std::string &input_name,
+                  const int &img_height, const int &img_width, const bool &is_resize_needed=0, ExtraChange=NO_NEED);
+
+    ///Загрузка замороженной модели графа в сессию без указания размера входного изображения
+    int LoadPbModel(const std::string &file_name, const std::vector<std::string> &output_name, const std::string &input_name);
+
+    ///Загрузка модели из чекпоинта в сесиию
+    int LoadCkptModel(const std::string &path_to_meta, const std::string &path_to_ckpt,
+                      const std::vector<std::string>  &output_name, const std::string &input_name,
+                      const int &img_height, const int &img_width);
+
+    ///Изменение разрешения
+    void ChangeResolution(const int &img_height, const int &img_width);
 
     ///Загрузка входного тенсора
     void SetInputTensor(const tensorflow::Tensor &input_tensor);
@@ -86,5 +108,6 @@ public:
     const tensorflow::Status& GetStatus(void);
 
 };
+
 
 #endif // TTFSESSION_H

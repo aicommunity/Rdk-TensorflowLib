@@ -30,7 +30,8 @@ void TTfSession::UnInit(void)
     }
 }
 
-int TTfSession::LoadModel(const std::string &file_name, const std::string &output_name, const std::string &input_name, const int &img_height, const int &img_width)
+int TTfSession::LoadPbModel(const std::string &file_name, const std::vector<std::string> &output_name,
+                            const std::string &input_name, const int &img_height, const int &img_width, const bool &is_resize_needed=0, ExtraChange=NO_NEED)
 {
     OutputName = output_name;
     InputName = input_name;
@@ -53,6 +54,75 @@ int TTfSession::LoadModel(const std::string &file_name, const std::string &outpu
         return 1;
     }
     return 0;
+}
+
+int TTfSession::LoadPbModel(const std::string &file_name, const std::vector<std::string> &output_name, const std::string &input_name)
+{
+    OutputName = output_name;
+    InputName = input_name;
+
+    Status = ReadBinaryProto(tensorflow::Env::Default(), file_name, &GraphDef);
+
+    if (!Status.ok())
+    {
+        std::cout << Status.ToString() << "\n";
+        return 1;
+    }
+
+    //Add the graph to the session
+    Status = Session->Create(GraphDef);
+    if (!Status.ok())
+    {
+        std::cout << Status.ToString() << "\n";
+        return 1;
+    }
+    return 0;
+}
+
+int TTfSession::LoadCkptModel(const std::string &path_to_meta, const std::string &path_to_ckpt,
+                              const std::vector<std::string> &output_name, const std::string &input_name,
+                              const int &img_height, const int &img_width)
+{
+    OutputName = output_name;
+    InputName = input_name;
+    ImgHeight = img_height;
+    ImgWidght = img_width;
+
+    Status = ReadBinaryProto(tensorflow::Env::Default(), path_to_meta, &MetaGraphDef);
+
+    if (!Status.ok())
+    {
+        std::cout << Status.ToString() << "\n";
+        return 1;
+    }
+
+    // Add the graph to the session
+    Status = Session->Create(MetaGraphDef.graph_def());
+
+    if (!Status.ok())
+    {
+        std::cout << Status.ToString() << "\n";
+        return 1;
+    }
+
+    // Read weights from the saved checkpoint
+    tensorflow::Tensor checkpointPathTensor(tensorflow::DataType::DT_STRING, tensorflow::TensorShape());
+    checkpointPathTensor.scalar<std::string>()() = path_to_ckpt;
+    Status = Session->Run({{MetaGraphDef.saver_def().filename_tensor_name(), checkpointPathTensor },}, {},
+                          {MetaGraphDef.saver_def().restore_op_name()},nullptr);
+
+    if (!Status.ok())
+    {
+            std::cout << Status.ToString() << "\n";
+    }
+
+    return 0;
+}
+
+void TTfSession::ChangeResolution(const int &img_height, const int &img_width)
+{
+    ImgHeight = img_height;
+    ImgWidght = img_width;
 }
 
 void TTfSession::SetInputTensor(const tensorflow::Tensor &input_tensor)
@@ -141,10 +211,11 @@ void TTfSession::SetInputCvMat(cv::Mat& image)
 
     auto a = tensorflow::ops::Placeholder(root.WithOpName("input"), tensorflow::DataType::DT_UINT8);
 
-    auto float_caster = tensorflow::ops::Cast(root, a, tensorflow::DT_FLOAT);
+    auto float_caster = tensorflow::ops::Cast(root, a, tensorflow::DataType::DT_UINT8);
 
-    auto resized = tensorflow::ops::ResizeBilinear(root, float_caster,
-                                                   tensorflow::ops::Const(root, {ImgHeight, ImgWidght}));
+    auto resized = tensorflow::ops::ResizeBilinear(root, a, tensorflow::ops::Const(root, {ImgHeight, ImgWidght}));
+
+    tensorflow::ops::Cast(root.WithOpName("out"), resized, tensorflow::DataType::DT_UINT8);
 
     auto substracted = tensorflow::ops::Sub(root, resized, {float(0)});
 
@@ -179,7 +250,7 @@ void TTfSession::SetInputCvMat(cv::Mat& image)
         std::cout << Status.ToString() << "\n";
     }
 
-    SetInputTensor(output[0]);
+    SetInputTensor(NewOne);
 }
 
 void TTfSession::SetInputCvMatNew(cv::Mat& image)
@@ -205,7 +276,7 @@ void TTfSession::SetInputCvMatNew(cv::Mat& image)
 
 void TTfSession::Run(void)
 {
-    Status = Session->Run(Input, {OutputName}, {}, &Output);
+    Status = Session->Run(Input, OutputName, {}, &Output);
 
     if (!Status.ok())
     {
@@ -230,17 +301,17 @@ const tensorflow::Tensor &TTfSession::GetInputTensor(void)
 
 cv::Mat TTfSession::TensorToMat(tensorflow::Tensor& tensor)
 {
-    cv::Mat image(tensor.shape().dim_size(1), tensor.shape().dim_size(2), CV_32FC3);
-
+    //cv::Mat image(tensor.shape().dim_size(1), tensor.shape().dim_size(2), CV_32FC3);
+    cv::Mat image(tensor.shape().dim_size(1), tensor.shape().dim_size(2), CV_8UC3);
     tensorflow::StringPiece tmp_data = tensor.tensor_data();
 
-    memcpy(image.data, const_cast<char*>(tmp_data.data()), image.rows*image.cols*image.channels()*sizeof(float));
+    memcpy(image.data, const_cast<char*>(tmp_data.data()), image.rows*image.cols*image.channels()*sizeof(char));
 
-    cv::Mat1f temp;
+    //cv::Mat1f temp;
 
-    temp = image*(255.f);
-
-    temp.convertTo(image, CV_8UC3);
+    //temp = image*(255.f);
+    //temp=image;
+    //temp.convertTo(image, CV_8UC3);
     cv::cvtColor(image, image, CV_BGR2RGB);
     return image;
 }

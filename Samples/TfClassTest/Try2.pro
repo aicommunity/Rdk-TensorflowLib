@@ -30,12 +30,12 @@ INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-genfiles
 
 INCLUDEPATH += $$(ABSEIL_PATH)
 
-unix:!macx: LIBS += -L $$(TENSORFLOW_PATH)/bazel-bin/tensorflow/ -ltensorflow_cc
+unix:!macx: LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_cc
 
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 
-unix:!macx: LIBS += -L $$(TENSORFLOW_PATH)/bazel-bin/tensorflow/ -ltensorflow_framework
+unix:!macx: LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_framework
 
 INCLUDEPATH += $$(TENSORFLOW_PATH)
 DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow

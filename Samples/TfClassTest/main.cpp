@@ -26,55 +26,66 @@ int main(int argc, char *argv[])
 
     TTfSession MNISTsession;
 
-    std::string PathMNIST = "/home/alexab/Try2/inception_v3_2016_08_28_frozen.pb";
+    std::string PathMNIST = "/home/alexab/Try2/TensorboardPB/frozen_inference_graph.pb";
 
     MNISTsession.Init();
 
-    MNISTsession.LoadModel(PathMNIST, "InceptionV3/Predictions/Reshape_1", "input", 299, 299);
+    MNISTsession.LoadPbModel(PathMNIST, {"detection_boxes", "detection_scores", "detection_classes", "num_detections"}, "image_tensor");
 
-    std::string PathToImage = "/home/alexab/Try2/grace_hopper.jpg";
+    std::string PathToImage = "/home/alexab/Try2/Example4.jpeg";
 
     cv::Mat img=cv::imread(PathToImage, 1);
 
     MNISTsession.SetInputCvMat(img);
 
-    //MNISTsession.SetInputCvMatNew(img);
-
     MNISTsession.Run();
 
     auto Result1 = MNISTsession.GetOutput();
 
-    string labels = "/home/alexab/Try2/imagenet_slim_labels.txt";
+    std::cout <<  Result1[0].shape() << std::endl;
+    std::cout <<  Result1[1].shape() << std::endl;
+    std::cout <<  Result1[2].shape() << std::endl;
+    std::cout <<  Result1[3].shape() << std::endl;
 
-    tensorflow::Status print_status = PrintTopLabels(Result1, labels);
+    std::cout <<  Result1[0].tensor<float,3>() << std::endl;
+    std::cout <<  Result1[1].tensor<float,2>() << std::endl;
+    std::cout <<  Result1[2].tensor<float,2>() << std::endl;
+    std::cout <<  Result1[3].scalar<float>() << std::endl;
+
+    auto DataToRead = Result1[1].matrix<float>();
+
+    auto NumberOfClasses = Result1[3].scalar<float>();
+
+    int Num = float(NumberOfClasses(0));
+
+    auto Boxes = Result1[0].tensor<float,3>();
+
+    float ksd = Result1[1].matrix<float>()(0,3);
 
     tensorflow::Tensor A = MNISTsession.GetInputTensor();
 
+    std::cout << A.shape() << std::endl;
+    std::cout << Num <<std::endl;
+    std::cout << DataToRead(0,3) << std::endl;
+
     cv::Mat image = MNISTsession.TensorToMat(A);
 
-    if(cv::imwrite("/home/alexab/newImage1.jpg", image))
+    int x0= int(image.cols*(Boxes(0,16,1)));
+    int y0 = int(image.rows*(Boxes(0,16,0)));
+    int x1= int(image.cols*(Boxes(0,16,3)));
+    int y1 = int(image.rows*(Boxes(0,16,2)));
+
+    std::cout <<image.rows <<std::endl;
+    std::cout <<image.cols <<std::endl;
+
+
+    for(int i=0; i < Num; i++)
     {
-        std::cout << "GJ" <<std::endl;
+        cv::rectangle(image, {int(image.cols*(Boxes(0,i,1))), int(image.rows*(Boxes(0,i,0)))},
+                             {int(image.cols*(Boxes(0,i,3))), int(image.rows*(Boxes(0,i,2)))}, cv::Scalar(0,0,0),2);
     }
-    else
-    {
-        std::cout << "NO" <<std::endl;
-    }
-    std::cout << A.shape().dim_size(2) <<std::endl;
 
-    //изображение с помощью тенсорфлоу
-    std::string PathToImage1 = "/home/alexab/newImage1.jpg";
-
-    cv::Mat img1=cv::imread(PathToImage1, 1);
-
-    //с помощью опенсиви
-    std::string PathToImage0 = "/home/alexab/newImage.jpg";
-
-    cv::Mat img0=cv::imread(PathToImage0, 1);
-
-    cv::Mat img3 = img1 - img0;
-
-    cv::imwrite("/home/alexab/substract.jpg", img3);
+    cv::imwrite("/home/alexab/new.jpg",image);
 
     return a.exec();
 }
