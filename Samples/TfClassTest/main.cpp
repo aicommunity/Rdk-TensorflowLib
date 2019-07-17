@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     {
         cv::rectangle(image, {int(image.cols*(Boxes(0,i,1))), int(image.rows*(Boxes(0,i,0)))},
                              {int(image.cols*(Boxes(0,i,3))), int(image.rows*(Boxes(0,i,2)))}, cv::Scalar(0,0,0),2);
-        cv::putText(image, Labels(0,i), {int(image.cols*(Boxes(0,i,1))), int(image.rows*(Boxes(0,i,0)))},);
+//        cv::putText(image, Labels(0,i), {int(image.cols*(Boxes(0,i,1))), int(image.rows*(Boxes(0,i,0)))},);
 
     }
 
