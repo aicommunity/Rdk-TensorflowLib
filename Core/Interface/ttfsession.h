@@ -21,13 +21,15 @@
 
 #include "label_image.h"
 
+namespace TTF
+{
 
-enum ExtraChange
+enum ExtraChangeCode
 {
     NO_NEED,
-    CAST_CHAR_TO_FLOAT,
-    NORMALIZE,
+    CHAR_TO_FLOAT_NORMALIZE,
 };
+
 
 class TTfSession
 {
@@ -39,9 +41,13 @@ protected:
 
     tensorflow::Session* Session;
 
+    //tensorflow::Session* SessionForTransform;
+
     tensorflow::Status Status;
 
     tensorflow::GraphDef GraphDef;
+
+    //tensorflow::GraphDef GrapfDefForTransform;
 
     tensorflow::MetaGraphDef MetaGraphDef;
 
@@ -49,9 +55,17 @@ protected:
 
     std::string InputName;
 
-    int ImgHeight;
+    //std::vector<tensorflow::Tensor> OutputForTransform;
 
-    int ImgWidght;
+    //std::vector<std::pair<std::string, tensorflow::Tensor>> InputsForTransform;
+
+    int ImgHeight=0;
+
+    int ImgWidth=0;
+
+    bool ResolutionChange;
+
+    ExtraChangeCode ExtraChange;
 
 public:
 
@@ -67,24 +81,24 @@ public:
 
     ///Загрузка замороженной модели графа в сессию с указанием размера входного изображения
     int LoadPbModel(const std::string &file_name, const std::vector<std::string> &output_name, const std::string &input_name,
-                  const int &img_height, const int &img_width, const bool &is_resize_needed=0, ExtraChange=NO_NEED);
+                    const bool &is_resize_needed=0, ExtraChangeCode=NO_NEED);
 
     ///Загрузка замороженной модели графа в сессию без указания размера входного изображения
-    int LoadPbModel(const std::string &file_name, const std::vector<std::string> &output_name, const std::string &input_name);
+    //int LoadPbModel(const std::string &file_name, const std::vector<std::string> &output_name, const std::string &input_name);
 
     ///Загрузка модели из чекпоинта в сесиию
-    int LoadCkptModel(const std::string &path_to_meta, const std::string &path_to_ckpt,
-                      const std::vector<std::string>  &output_name, const std::string &input_name,
-                      const int &img_height, const int &img_width);
+    //int LoadCkptModel(const std::string &path_to_meta, const std::string &path_to_ckpt,
+    //                  const std::vector<std::string>  &output_name, const std::string &input_name,
+    //                 const int &img_height, const int &img_width);
 
     ///Изменение разрешения
-    void ChangeResolution(const int &img_height, const int &img_width);
+    void SetResolutionParams(const int &img_height, const int &img_width);
 
     ///Загрузка входного тенсора
     void SetInputTensor(const tensorflow::Tensor &input_tensor);
 
     ///Загрузка входного тенсора из изображения
-    void SetInputImg(const std::string &image_path);
+    //void SetInputImg(const std::string &image_path);
 
     ///Загрузка входного тенсора из объекта Mat, используя tensorflow
     void SetInputCvMat(cv::Mat& image);
@@ -93,7 +107,7 @@ public:
     void SetInputCvMatNew(cv::Mat& image);
 
     ///Загрузка входного тенсора из сырых данных
-    void SetInputRawImg(unsigned char* data, int width, int height, int channels_num);
+    //void SetInputRawImg(unsigned char* data, int width, int height, int channels_num);
 
     ///Преобразование тенсора в Mat
     cv::Mat TensorToMat(tensorflow::Tensor& tensor);
@@ -109,5 +123,5 @@ public:
 
 };
 
-
+}
 #endif // TTFSESSION_H
