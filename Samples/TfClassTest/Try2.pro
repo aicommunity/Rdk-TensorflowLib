@@ -29,13 +29,14 @@ target.path = $$PWD/../../Bin
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-genfiles
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/eigen_archive
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/protobuf_archive/src
+INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/com_google_absl
 #INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-genfiles
 #INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build/nsync/src/nsync/public
 #INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build
 #INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build/eigen/src/eigen
 #INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build/protobuf/src/protobuf/src
 
-INCLUDEPATH += $$(ABSEIL_PATH)
+#INCLUDEPATH += $$(ABSEIL_PATH)
 
 unix:!macx: LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_cc
 
