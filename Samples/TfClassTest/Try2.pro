@@ -10,7 +10,7 @@ QMAKE_CXXFLAGS += /std:c++11
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
-DEFINES += _MSC_VER=1916
+DEFINES += NOMINMAX
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -43,6 +43,10 @@ INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 
 unix:!macx: LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_framework
+
+windows {
+LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -llibtensorflow_framework -llibtensorflow -llibtensorflow_cc
+}
 
 INCLUDEPATH += $$(TENSORFLOW_PATH)
 DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
