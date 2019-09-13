@@ -3,8 +3,6 @@ QT -= gui
 CONFIG += c++11 console
 CONFIG -= app_bundle
 
-#QMAKE_CXXFLAGS += /std:c++11
-
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -27,9 +25,9 @@ target.path = $$PWD/../../Bin
 
 #INCLUDEPATH += $$(TENSORFLOW_PATH)
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-genfiles
-INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow3/external/eigen_archive
-INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow3/external/protobuf_archive/src
-INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow3/external/com_google_absl
+INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/eigen_archive
+INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/protobuf_archive/src
+INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/com_google_absl
 #INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-genfiles
 #INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build/nsync/src/nsync/public
 #INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build
@@ -46,7 +44,7 @@ DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 unix:!macx: LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_framework
 
 windows {
-LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -llibtensorflow_framework -llibtensorflow -llibtensorflow_cc
+LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -llibtensorflow_framework.dll -llibtensorflow.dll -llibtensorflow_cc.dll
 }
 
 INCLUDEPATH += $$(TENSORFLOW_PATH)
