@@ -1,7 +1,8 @@
-#ifndef RDK_UCLASSIFIER_CPP
-#define RDK_UCLASSIFIER_CPP
+#ifndef RDK_UTFCLASSIFIER_CPP
+#define RDK_UTFCLASSIFIER_CPP
 
 #include "UTfClassifier.h"
+#include "Interface/ttfsession.h"
 
 namespace RDK {
 

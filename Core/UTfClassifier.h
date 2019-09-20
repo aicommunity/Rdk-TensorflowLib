@@ -2,10 +2,11 @@
 #define RDK_UTFCLASSIFIER_H
 
 #include "../../../Rdk/Deploy/Include/rdk.h"
+//#include "Interface/ttfsession.h"
 
 namespace RDK {
 
-class UTfClassifier: public RDK::UNet
+class RDK_LIB_TYPE UTfClassifier: public RDK::UNet
 {
 protected: // Свойства           
 

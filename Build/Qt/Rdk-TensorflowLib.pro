@@ -33,6 +33,7 @@ DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 unix {
     DESTDIR = $$PWD/../../../../Bin/Platform/Linux/Lib.Qt
     LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_cc
+    LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_framework
 }
 
 windows {

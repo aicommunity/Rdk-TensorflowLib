@@ -23,18 +23,10 @@ SOURCES += \
 target.path = $$PWD/../../Bin
 !isEmpty(target.path): INSTALLS += target
 
-#INCLUDEPATH += $$(TENSORFLOW_PATH)
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-genfiles
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/eigen_archive
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/protobuf_archive/src
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/com_google_absl
-#INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-genfiles
-#INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build/nsync/src/nsync/public
-#INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build
-#INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build/eigen/src/eigen
-#INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/contrib/cmake/build/protobuf/src/protobuf/src
-
-#INCLUDEPATH += $$(ABSEIL_PATH)
 
 unix:!macx: LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_cc
 
@@ -73,7 +65,7 @@ contains(DEFINES, RDK_USE_CUDA) {
     OPENCV_COMPILED_VERSION_86 = vc15
 }
 
- # функция добавляет постфикс(второй параметр) ко всем элементам первого входного параметра
+ # С„СѓРЅРєС†РёСЏ РґРѕР±Р°РІР»СЏРµС‚ РїРѕСЃС‚С„РёРєСЃ(РІС‚РѕСЂРѕР№ РїР°СЂР°РјРµС‚СЂ) РєРѕ РІСЃРµРј СЌР»РµРјРµРЅС‚Р°Рј РїРµСЂРІРѕРіРѕ РІС…РѕРґРЅРѕРіРѕ РїР°СЂР°РјРµС‚СЂР°
  defineReplace(addPostfix) {
   libList = $$1
   for(lib, libList) {

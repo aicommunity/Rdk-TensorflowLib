@@ -1,11 +1,11 @@
-#include <QCoreApplication>
+#include "mainwindow.h"
+#include <QApplication>
+#include "../../../Core/Interface/ttfsession.h"
 
-#include <fstream>
-#include <iostream>
-//#include <sys/time.h>
-#include "../../Core/Interface/ttfsession.h"
 
 using namespace TTF;
+
+
 
 #define StopIfBad(val) if(!val)                         \
 { std::cout << FirstExample.GetDebugStr() << std::endl; \
@@ -13,7 +13,9 @@ using namespace TTF;
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    QApplication a(argc, argv);
+    //MainWindow w;
+    //w.show();
 
     cv::Mat img=cv::imread("/home/alexab/Try2/grace_hopper.jpg",1);
 
@@ -33,8 +35,9 @@ int main(int argc, char *argv[])
 
     std::string labels = "/home/alexab/Try2/imagenet_slim_labels.txt";
 
-    //РІС‹РІРѕРґ РІ РєРѕРЅСЃРѕР»СЊ РІРµСЂРѕСЏС‚РЅРѕСЃС‚РµР№ РїСЂРёРЅР°РґР»РµР¶РЅРѕСЃС‚Рё Рє РєР»Р°СЃСЃСѓ Рё РёРјСЏ РєР»Р°СЃСЃРѕРІ
+    //вывод в консоль вероятностей принадлежности к классу и имя классов
     //tensorflow::Status print_status = PrintTopLabels(Result1, labels);
+
 
 
     return a.exec();

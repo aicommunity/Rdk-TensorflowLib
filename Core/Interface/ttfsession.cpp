@@ -1,4 +1,5 @@
 #include "ttfsession.h"
+#include "tensorflow/cc/ops/standard_ops.h"
 namespace  TTF
 {
 
