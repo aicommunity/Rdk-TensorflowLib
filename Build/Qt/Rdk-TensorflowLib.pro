@@ -26,7 +26,12 @@ windows {
 }
 
 HEADERS += \
-
+    ../../Core/Lib.h \
+    ../../Core/Interface/label_image.h \
+    ../../Core/Interface/ttfsession.h \
+    ../../Core/UTfClassifier.h
 
 SOURCES += \
-
+    ../../Core/Lib.cpp \
+    ../../Core/Interface/ttfsession.cpp \
+    ../../Core/UTfClassifier.cpp

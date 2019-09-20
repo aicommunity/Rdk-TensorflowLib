@@ -3,6 +3,8 @@
 
 #include "../../../Rdk/Deploy/Include/rdk.h"
 
+#include "UTfClassifier.h"
+
 namespace RDK {
 
 class RDK_LIB_TYPE UTensorflowLib: public RDK::ULibrary

@@ -1,7 +1,7 @@
 #ifndef RDK_UTensorflowLib_CPP
 #define RDK_UTensorflowLib_CPP
 
-#include "UTensorflowLib.h"
+#include "Lib.h"
 
 namespace RDK {
 
@@ -25,13 +25,7 @@ UTensorflowLib::UTensorflowLib(void)
 // Не требуется предварительная очистка массива и уборка памяти.
 void UTensorflowLib::CreateClassSamples(RDK::UStorage *storage)
 {
- RDK::UContainer *cont(0);
-/*
- cont=new UStatisticMatrix<int>;
- cont->SetName("StatisticIntMatrix");
- cont->Default();
- UploadClass("UStatisticIntMatrix",cont);
-*/
+ UploadClass<UTfClassifier>("TClassifier", "Classifier");
 }
 // --------------------------
 
