@@ -325,7 +325,7 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
     cv::cvtColor(image, image, CV_BGR2RGB);
 
     //Копирование данных из cv::Mat в входной тензор
-    memcpy(const_cast<char*>(tmp_data.data()), image.data, ulong(image.rows*image.cols*image.channels())*sizeof(char));
+    memcpy(const_cast<char*>(tmp_data.data()), image.data, (unsigned long)(image.rows*image.cols*image.channels())*sizeof(char));
 
     //Тензор со значениями нового размера изображения
     tensorflow::Tensor SizeTensor(tensorflow::DataType::DT_INT32, tensorflow::TensorShape({2}));
@@ -401,7 +401,7 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     //Сохранение полученного изображения в тензор
     tensorflow::Tensor NewOne(InputDataType, tensorflow::TensorShape({1,image.rows,image.cols,image.channels()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
-    memcpy(const_cast<char*>(tmp_data.data()), image.data, ulong(image.rows*image.cols*image.channels()*tensorflow::DataTypeSize(InputDataType)));
+    memcpy(const_cast<char*>(tmp_data.data()), image.data, size_t(image.rows*image.cols*image.channels()*tensorflow::DataTypeSize(InputDataType)));
 
     //Установка входного тензора
     if(!SetInputTensor(NewOne))

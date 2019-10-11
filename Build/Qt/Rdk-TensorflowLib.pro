@@ -24,6 +24,7 @@ DEFINES += RDK_LIB_CVS_REVISION=$$VERSION
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-genfiles
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/eigen_archive
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/protobuf_archive/src
+INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/com_google_protobuf/src
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/com_google_absl
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow

@@ -2,7 +2,7 @@
 #define RDK_UTFCLASSIFIER_H
 
 #include "../../../Rdk/Deploy/Include/rdk.h"
-//#include "Interface/ttfsession.h"
+#include "Interface/ttfsession.h"
 
 namespace RDK {
 
