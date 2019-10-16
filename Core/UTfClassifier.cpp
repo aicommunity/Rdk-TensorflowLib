@@ -1,8 +1,7 @@
-#ifndef RDK_UTFCLASSIFIER_CPP
-#define RDK_UTFCLASSIFIER_CPP
+#ifndef RDK_UCLASSIFIER_CPP
+#define RDK_UCLASSIFIER_CPP
 
 #include "UTfClassifier.h"
-#include "Interface/ttfsession.h"
 
 namespace RDK {
 
@@ -11,19 +10,79 @@ namespace RDK {
 // Конструкторы и деструкторы
 // --------------------------
 UTfClassifier::UTfClassifier(void)
+    : ModelPath("ModelPath",this),
+      InputNodeName("InputNodeName",this),
+      OutputNodeName("OutputNodeName",this),
+      ImgDiv("ImgDiv",this),
+      ImgSub("ImgSub",this),
+      GpuFraction("GpuFraction",this),
+      GpuGrow("GpuGrow",this),
+      InputImage("InputImage",this),
+      DebugImage("DebugImage",this),
+      NumberOfClass("NumberOfClass", this),
+      DebugFloat("DebugFloat",this),
+      DebugString("DebugString",this)
 {
 }
 
 UTfClassifier::~UTfClassifier(void)
 {
 }
-// --------------------------    
+// --------------------------
 
 
 // ---------------------
 // Методы управления параметрами
 // ---------------------
 // ---------------------
+bool UTfClassifier::SetModelPath(const std::string &value)
+{
+    Ready=false;
+    ModelPath=value;
+    return true;
+}
+
+bool UTfClassifier::SetInputNodeName(const std::string &value)
+{
+    Ready=false;
+    InputNodeName=value;
+    return true;
+}
+
+bool UTfClassifier::SetOutputNodeName(const std::vector<std::string> &value)
+{
+    Ready=false;
+    OutputNodeName=value;
+    return true;
+}
+
+bool UTfClassifier::SetImgDiv(const float &value)
+{
+    Ready=false;
+    ImgDiv=value;
+    return true;
+}
+
+bool UTfClassifier::SetImgSub(const float &value)
+{
+    Ready=false;
+    ImgSub=value;
+    return true;
+}
+
+bool UTfClassifier::SetGpuFraction(const double &value)
+{
+    Ready=false;
+    GpuFraction=value;
+    return true;
+}
+
+bool UTfClassifier::SetGpuGrow(const bool &value)
+{
+    Ready=false;
+    GpuGrow=value;
+    return true;
+}
 
 // ---------------------
 // Методы управления переменными состояния
@@ -42,12 +101,25 @@ UTfClassifier* UTfClassifier::New(void)
 
 
 // --------------------------
-// Скрытые методы управления счетом 
+// Скрытые методы управления счетом
 // --------------------------
 // Восстановление настроек по умолчанию и сброс процесса счета
 bool UTfClassifier::ADefault(void)
-{           
- return true;
+{
+    ModelPath="/home/vladburin/1_Folder/TF/smth/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb";
+
+    InputNodeName="input";
+
+    OutputNodeName={"InceptionV3/Predictions/Reshape_1",};
+
+    ImgDiv=255;
+
+    ImgSub=0;
+
+    GpuFraction=0.5;
+
+    GpuGrow=false;
+    return true;
 }
 
 // Обеспечивает сборку внутренней структуры объекта
@@ -56,7 +128,28 @@ bool UTfClassifier::ADefault(void)
 // в случае успешной сборки
 bool UTfClassifier::ABuild(void)
 {
- return true;
+    if(!TfObject.SetGraphParams(OutputNodeName,InputNodeName))
+    {
+        DebugString=TfObject.GetDebugStr();
+         NumberOfClass=2;
+        return true;
+    }
+
+    if(!TfObject.InitModel(std::string(ModelPath),GpuFraction,GpuGrow))
+    {
+        DebugString=TfObject.GetDebugStr();
+         NumberOfClass=1;
+        return true;
+    }
+
+    if(!TfObject.SetImgParams(ImgSub,ImgDiv))
+    {
+        DebugString=TfObject.GetDebugStr();
+         NumberOfClass=3;
+        return true;
+    }
+    NumberOfClass=4;
+    return true;
 }
 
 // Сброс процесса счета без потери настроек
@@ -68,7 +161,34 @@ bool UTfClassifier::AReset(void)
 // Выполняет расчет этого объекта
 bool UTfClassifier::ACalculate(void)
 {
- return true;
+   UBitmap NewOne;
+   NewOne.SetColorModel(ubmRGB24);
+   InputImage->ConvertTo(NewOne);
+
+   cv::Mat m(NewOne.GetHeight(),NewOne.GetWidth(), CV_8UC3, NewOne.GetData());
+
+   cv::Mat input;
+   m.copyTo(input);
+   if(!TfObject.SetInputDataTfMeth(input))
+   {
+       DebugString=TfObject.GetDebugStr();
+       NumberOfClass=1;
+       return true;
+   }
+
+   if(!TfObject.Run())
+   {
+       DebugString=TfObject.GetDebugStr();
+       NumberOfClass=2;
+       return true;
+   }
+   DebugFloat=TfObject.GetOutput()[0].matrix<float>()(0,653);
+   NumberOfClass=10;//TfObject.GetOutput().size();
+   //TfObject.GetOutput()[0].matrix<float,1>()(653);
+
+   DebugString=TfObject.GetOutput()[0].DebugString();
+
+    return true;
 }
 // --------------------------
 

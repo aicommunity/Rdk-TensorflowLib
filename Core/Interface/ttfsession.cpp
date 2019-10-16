@@ -5,7 +5,7 @@ namespace  TTF
 
 bool TTfSession::CheckInOutNodes()
 {
-    //РџСЂРѕРІРµСЂРєРё РЅР° РЅР°Р»РёС‡РёРµ РёРјРµРЅРё РІС…РѕРґРЅРѕРіРѕ Рё РІС‹С…РѕРґРЅРѕРіРѕ СѓР·Р»Р°
+    //Проверки на наличие имени входного и выходного узла
     if(InputName.empty())
     {
         ErCode=EMPTY_INPUT_NAME;
@@ -18,7 +18,7 @@ bool TTfSession::CheckInOutNodes()
         return false;
     }
 
-    //РџРѕРёСЃРє РІС…РѕРґРЅРѕРіРѕ Р·РІРµРЅР°
+    //Поиск входного звена
     tensorflow::NodeDef Node;
     for(int i=0; i<GraphDef.node_size();i++)
     {
@@ -27,20 +27,20 @@ bool TTfSession::CheckInOutNodes()
         {
             break;
         }
-        //Р•СЃР»Рё СѓР·РµР» РЅРµ Р±С‹Р» РЅР°Р№РґРµРЅ
+        //Если узел не был найден
         if(i==(GraphDef.node_size()-1))
         {
             ErCode = INPUT_NODE_DOESNT_EXIST_IN_GRAPH;
             return false;
         }
     }
-    //Р—Р°РґР°РЅРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ РІС…РѕРґРЅРѕРіРѕ С‚РµРЅР·РѕСЂР° РёР· РїР°СЂР°РјРµС‚СЂРѕРІ СѓР·Р»Р°
+    //Задание параметров входного тензора из параметров узла
     InputDataType = Node.attr().at("dtype").type();
     ImgHeight =     int(Node.attr().at("shape").shape().dim(1).size());
     ImgWidth  =     int(Node.attr().at("shape").shape().dim(2).size());
     ImgChan  =      int(Node.attr().at("shape").shape().dim(3).size());
 
-    //РџСЂРѕРІРµСЂРєР° РЅР° СЃСѓС‰РµС‚СЃРІРѕРІР°РЅРёРµ РІС‹С…РѕРґРЅРѕРіРѕ СѓР·Р»Р°
+    //Проверка на сущетсвование выходного узла
     for(uint j=0; j < OutputName.size(); j++)
     {
         for(int i=0; i<GraphDef.node_size();i++)
@@ -64,12 +64,12 @@ bool TTfSession::CheckInOutNodes()
 
 bool TTfSession::InitSession(const double &gpu_fraction, const bool& allow_gpu_grow)
 {
-    //РћРїСЂРµРґРµР»РµРЅРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ СЃРµСЃСЃРёРё
+    //Определение параметров сессии
     tensorflow::SessionOptions opts;
     opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(gpu_fraction);
     opts.config.mutable_gpu_options()->set_allow_growth(allow_gpu_grow);
 
-    //РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃРµСЃСЃРёРё
+    //Инициализация сессии
     Status = tensorflow::NewSession(opts, &Session);
     if(!Status.ok())
     {
@@ -96,7 +96,7 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
         return false;
     }
 
-    //Р§С‚РµРЅРёРµ pb РјРѕРґРµР»Рё РІ РіСЂР°С„
+    //Чтение pb модели в граф
     Status = ReadBinaryProto(tensorflow::Env::Default(), file_name, &GraphDef);
     if(!Status.ok())
     {
@@ -104,7 +104,7 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
         return false;
     }
 
-    //Р”РѕР±Р°РІР»РµРЅРёРµ РіСЂР°С„Р° РІ СЃРµСЃСЃРёСЋ
+    //Добавление графа в сессию
     Status = Session->Create(GraphDef);
     if(!Status.ok())
     {
@@ -112,7 +112,7 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
         return false;
     }
 
-    //Р—Р°РїСѓСЃРє РјРµС‚РѕРґР° РїСЂРѕРІРµСЂРєРё РІС…РѕРґРЅРѕРіРѕ Рё РІС‹С…РѕРґРЅС‹С… СѓР·Р»РѕРІ
+    //Запуск метода проверки входного и выходных узлов
     if(!CheckInOutNodes())
     {
         return false;
@@ -129,7 +129,7 @@ bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &p
         return false;
     }
 
-    //Р—Р°РіСЂСѓР·РєР° РіСЂР°С„Р° РёР· meta С„Р°Р№Р»Р° РІ MetaGraphDef
+    //Загрузка графа из meta файла в MetaGraphDef
     Status = ReadBinaryProto(tensorflow::Env::Default(), path_to_meta, &MetaGraphDef);
     if(!Status.ok())
     {
@@ -137,7 +137,7 @@ bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &p
         return false;
     }
 
-    //Р”РѕР±Р°РІР»РµРЅРёРµ РіСЂР°С„Р° РІ СЃРµСЃСЃРёСЋ
+    //Добавление графа в сессию
     Status = Session->Create(MetaGraphDef.graph_def());
     if(!Status.ok())
     {
@@ -145,11 +145,11 @@ bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &p
         return false;
     }
 
-    //Р§С‚РµРЅРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ (РІРµСЃРѕРІ) РІ РіСЂР°С„
+    //Чтение параметров (весов) в граф
     tensorflow::Tensor checkpointPathTensor(tensorflow::DataType::DT_STRING, tensorflow::TensorShape());
 
     checkpointPathTensor.scalar<std::string>()() = path_to_ckpt;
-    //Р§С‚РµРЅРёРµ РІРµСЃРѕРІ РјРѕРґРµР»Рё РёР· С„Р°Р№Р»Р° checkpoint'Р°
+    //Чтение весов модели из файла checkpoint'а
     Status = Session->Run({{MetaGraphDef.saver_def().filename_tensor_name(), checkpointPathTensor },},
                           {},{MetaGraphDef.saver_def().restore_op_name()},nullptr);
     if(!Status.ok())
@@ -158,7 +158,7 @@ bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &p
         return false;
     }
 
-    //Р—Р°РїСѓСЃРє РјРµС‚РѕРґР° РїСЂРѕРІРµСЂРєРё РІС…РѕРґРЅРѕРіРѕ Рё РІС‹С…РѕРґРЅС‹С… СѓР·Р»РѕРІ
+    //Запуск метода проверки входного и выходных узлов
     if(!CheckInOutNodes())
     {
         return false;
@@ -208,7 +208,7 @@ bool TTfSession::UnInit(void)
 
 bool TTfSession::SetGraphParams(const std::vector<std::string> &output_name, const std::string &input_name)
 {
-    //РџСЂРѕРІРµСЂРєРё РЅР° РЅР°Р»РёС‡РёРµ РёРјРµРЅРё РІС…РѕРґРЅРѕРіРѕ Рё РІС‹С…РѕРґРЅРѕРіРѕ СѓР·Р»Р°
+    //Проверки на наличие имени входного и выходного узла
     if(input_name.empty())
     {
         ErCode=EMPTY_INPUT_NAME;
@@ -220,7 +220,7 @@ bool TTfSession::SetGraphParams(const std::vector<std::string> &output_name, con
         return false;
     }
 
-    //РћРїСЂРµРґРµР»РµРЅРёРµ РёРјРµРЅ РІС…РѕРґРЅРѕРіРѕ Рё РІС‹С…РѕРґРЅРѕРіРѕ СѓР·Р»Р°
+    //Определение имен входного и выходного узла
     OutputName = output_name;
     InputName = input_name;
 
@@ -230,13 +230,13 @@ bool TTfSession::SetGraphParams(const std::vector<std::string> &output_name, con
 
 bool TTfSession::SetInputTensor(const tensorflow::Tensor &input_tensor)
 {
-   //РџСЂРѕРІРµСЂРєР° РЅР° РЅР°Р»РёС‡РёРµ РЅР°Р·РІР°РЅРёСЏ Сѓ С‚РµРЅР·РѕСЂР°
+   //Проверка на наличие названия у тензора
    if(InputName.empty())
    {
        ErCode = EMPTY_INPUT_NAME;
        return false;
    }
-   //РџСЂРѕРІРµСЂРєР° РЅР° РЅР°Р»РёС‡РёРµ СЌР»РµРјРµРЅС‚РѕРІ РІ С‚РµРЅР·РѕСЂРµ
+   //Проверка на наличие элементов в тензоре
    if(!input_tensor.NumElements())
    {
        ErCode = EMPTY_INPUT_TENSOR;
@@ -249,7 +249,7 @@ bool TTfSession::SetInputTensor(const tensorflow::Tensor &input_tensor)
 
 bool TTfSession::SetImgParams(const float & sub, const float & div)
 {
-    //РџСЂРѕРІРµСЂРєР° РЅР° РґРµР»РµРЅРёРµ РЅР° РЅРѕР»СЊ
+    //Проверка на деление на ноль
     if(!int(div))
     {
         ErCode = DIVISION_BY_ZERO;
@@ -261,47 +261,47 @@ bool TTfSession::SetImgParams(const float & sub, const float & div)
     return true;
 }
 
-bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
+bool TTfSession::SetInputDataTfMeth(const RDK::UBitmap& image)
 {
-    //РџСЂРѕРІРµСЂРєР° РЅР° РѕРїСЂРµРґРµР»РµРЅРёРµ РІС…РѕРґРЅС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ
+    //Проверка на определение входных параметров
     if(int(Divide)==0)
     {
         ErCode = DIVISION_BY_ZERO;
         return false;
     }
 
-    //Р‘С‹Р» Р»Рё СЃРѕР·РґР°РЅ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РіСЂР°С„ РґР»СЏ С‚СЂР°РЅСЃС„РѕСЂРјР°С†РёРё
+    //Был ли создан дополнительный граф для трансформации
     if(!IsTransSessCreated)
     {
-        //РЎРѕР·РґР°РЅРёРµ РіСЂР°С„Р° РІС‹С‡РёСЃР»РµРЅРёР№ РґР»СЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РІС…РѕРґРЅРѕР№ С‚РµРЅР·РѕСЂ РІ РЅСѓР¶РЅС‹Р№ РІРёРґ
+        //Создание графа вычислений для преобразования входной тензор в нужный вид
         tensorflow::Scope root = tensorflow::Scope::NewRootScope();
-        //РЎСЋРґР° Р±СѓРґРµС‚ Р·Р°РґР°РІР°С‚СЊСЃСЏ С‚РµРЅР·РѕСЂ СЃ СЃС‹СЂС‹РјРё РґР°РЅРЅС‹РјРё РёР·РѕР±СЂР°Р¶РµРЅРёСЏ, РґР°РЅРЅС‹Рµ РІ С„РѕСЂРјР°С‚Рµ char
+        //Сюда будет задаваться тензор с сырыми данными изображения, данные в формате char
         auto a = tensorflow::ops::Placeholder(root.WithOpName("input"), tensorflow::DataType::DT_UINT8);
-        //РЎСЋРґР° Р±СѓРґРµС‚ Р·Р°РґР°РІР°С‚СЊСЃСЏ С‚РµРЅР·РѕСЂ СЃ РЅРѕРІС‹Рј СЂР°Р·РјРµСЂРѕРј РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
+        //Сюда будет задаваться тензор с новым размером изображения
         auto Size = tensorflow::ops::Placeholder(root.WithOpName("NewSize"), tensorflow::DataType::DT_INT32);
-        //РЈР·РµР» РёР·РјРµРЅРµРЅРёСЏ СЂР°Р·РјРµСЂР°
+        //Узел изменения размера
         auto resized = tensorflow::ops::ResizeBilinear(root, a, Size);
-        //РЈР·РµР» РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ С‚РёРї РґР°РЅРЅС‹С… С‚РµРЅР·РѕСЂР°
+        //Узел преобразования тип данных тензора
         auto caster = tensorflow::ops::Cast(root, resized, InputDataType);
-        //РЈР·РµР» РІС‹С‡РёС‚Р°РЅРёСЏ РёР· С‚РµРЅР·РѕСЂР°
+        //Узел вычитания из тензора
         auto substracted = tensorflow::ops::Sub(root, caster, tensorflow::ops::Cast(root,{Substract},InputDataType));
-        //РЈР·РµР» РґРµР»РµРЅРёСЏ РґР°РЅРЅС‹С… С‚РµРЅР·РѕСЂР°
+        //Узел деления данных тензора
         tensorflow::ops::Div(root.WithOpName("out"), substracted, tensorflow::ops::Cast(root,{Divide},InputDataType));
-        //РџРµСЂРµРІРѕРґ Scope РІ С„РѕСЂРјР°С‚ GraphDef
+        //Перевод Scope в формат GraphDef
         Status = root.ToGraphDef(&GraphForTransform);
         if(!Status.ok())
         {
             ErCode = TfErrorCode::BAD_STATUS;
             return false;
         }
-        //РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃРµСЃСЃРёРё РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ
+        //Инициализация сессии преобразования
         Status = tensorflow::NewSession(tensorflow::SessionOptions(), &SessionForTransform);
         if(!Status.ok())
         {
             ErCode = TfErrorCode::BAD_STATUS;
             return false;
         }
-        //Р”РѕР±Р°РІР»РµРЅРёРµ РіСЂР°С„Р° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РІ СЃРµСЃСЃРёСЋ
+        //Добавление графа преобразования в сессию
         Status = SessionForTransform->Create(GraphForTransform);
         if(!Status.ok())
         {
@@ -311,35 +311,128 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
         IsTransSessCreated=true;
     }
 
-    //Р•СЃР»Рё СЂР°Р·РјРµСЂ РЅРµ Р·Р°РґР°РЅ СЃС‚СЂРѕРіРѕ, Р±РµСЂРµС‚СЃСЏ СЂР°Р·РјРµСЂ РІС…РѕРґРЅРѕРіРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ cv::Mat
+    //Если размер не задан строго, берется размер входного изображения cv::Mat
     if(ImgHeight==-1 && ImgWidth==-1)
     {
-        ImgHeight=image.rows;
-        ImgWidth=image.cols;
+        ImgHeight=image.GetHeight();
+        ImgWidth=image.GetWidth();
     }
-    //РўРµРЅР·РѕСЂ СЃ РІС…РѕРґРЅС‹Рј РёР·РѕР±СЂР°Р¶РµРЅРёРµРј СЃ РґР°РЅРЅС‹РјРё РІ С„РѕСЂРјР°С‚Рµ char
-    tensorflow::Tensor NewOne(tensorflow::DataType::DT_UINT8, tensorflow::TensorShape({1,image.rows,image.cols,image.channels()}));
+    //Тензор с входным изображением с данными в формате char
+    tensorflow::Tensor NewOne(tensorflow::DataType::DT_UINT8, tensorflow::TensorShape({1,image.GetHeight(),image.GetWidth(),image.GetByteLength()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
 
-    //РџРµСЂРµРІРѕРґ РёР· BGR РІ RGB
-    cv::cvtColor(image, image, CV_BGR2RGB);
+    //Перевод из BGR в RGB
+    //cv::cvtColor(image, image, CV_BGR2RGB);
 
-    //РљРѕРїРёСЂРѕРІР°РЅРёРµ РґР°РЅРЅС‹С… РёР· cv::Mat РІ РІС…РѕРґРЅРѕР№ С‚РµРЅР·РѕСЂ
-    memcpy(const_cast<char*>(tmp_data.data()), image.data, (unsigned long)(image.rows*image.cols*image.channels())*sizeof(char));
+    //Копирование данных из cv::Mat в входной тензор
+    memcpy(const_cast<char*>(tmp_data.data()), (image.GetData()), (unsigned long)(image.GetByteLength())*sizeof(char));
 
-    //РўРµРЅР·РѕСЂ СЃРѕ Р·РЅР°С‡РµРЅРёСЏРјРё РЅРѕРІРѕРіРѕ СЂР°Р·РјРµСЂР° РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
+    //Тензор со значениями нового размера изображения
     tensorflow::Tensor SizeTensor(tensorflow::DataType::DT_INT32, tensorflow::TensorShape({2}));
     SizeTensor.tensor<int32_t,1>()(0)=ImgHeight;
     SizeTensor.tensor<int32_t,1>()(1)=ImgWidth;
 
-    //Р—Р°РїСѓСЃРє РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ, РїРµСЂРµРґР°РІР°СЏ РІС…РѕРґРЅРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ Рё РЅРѕРІС‹Рµ Р·РЅР°С‡РµРЅРёСЏ СЂР°Р·РјРµСЂР°
+    //Запуск преобразования, передавая входное изображение и новые значения размера
     Status = SessionForTransform->Run({{"input",NewOne},{"NewSize",SizeTensor}},{"out"},{},&OutputForTransform);
     if(!Status.ok())
     {
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
-    //РЈСЃС‚Р°РЅРѕРІРєР° РІС…РѕРґРЅРѕРіРѕ С‚РµРЅР·РѕСЂР°
+    //Установка входного тензора
+    if(!SetInputTensor(OutputForTransform[0]))
+    {
+        return false;
+    }
+
+    OutputForTransform.clear();
+
+    ErCode=OK;
+    return true;
+}
+
+
+bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
+{
+    //Проверка на определение входных параметров
+    if(int(Divide)==0)
+    {
+        ErCode = DIVISION_BY_ZERO;
+        return false;
+    }
+
+    //Был ли создан дополнительный граф для трансформации
+    if(!IsTransSessCreated)
+    {
+        //Создание графа вычислений для преобразования входной тензор в нужный вид
+        tensorflow::Scope root = tensorflow::Scope::NewRootScope();
+        //Сюда будет задаваться тензор с сырыми данными изображения, данные в формате char
+        auto a = tensorflow::ops::Placeholder(root.WithOpName("input"), tensorflow::DataType::DT_UINT8);
+        //Сюда будет задаваться тензор с новым размером изображения
+        auto Size = tensorflow::ops::Placeholder(root.WithOpName("NewSize"), tensorflow::DataType::DT_INT32);
+        //Узел изменения размера
+        auto resized = tensorflow::ops::ResizeBilinear(root, a, Size);
+        //Узел преобразования тип данных тензора
+        auto caster = tensorflow::ops::Cast(root, resized, InputDataType);
+        //Узел вычитания из тензора
+        auto substracted = tensorflow::ops::Sub(root, caster, tensorflow::ops::Cast(root,{Substract},InputDataType));
+        //Узел деления данных тензора
+        tensorflow::ops::Div(root.WithOpName("out"), substracted, tensorflow::ops::Cast(root,{Divide},InputDataType));
+        //Перевод Scope в формат GraphDef
+        Status = root.ToGraphDef(&GraphForTransform);
+        if(!Status.ok())
+        {
+            ErCode = TfErrorCode::BAD_STATUS;
+            return false;
+        }
+        //Инициализация сессии преобразования
+        Status = tensorflow::NewSession(tensorflow::SessionOptions(), &SessionForTransform);
+        if(!Status.ok())
+        {
+            ErCode = TfErrorCode::BAD_STATUS;
+            return false;
+        }
+        //Добавление графа преобразования в сессию
+        Status = SessionForTransform->Create(GraphForTransform);
+        if(!Status.ok())
+        {
+            ErCode = TfErrorCode::BAD_STATUS;
+            return false;
+        }
+        IsTransSessCreated=true;
+    }
+
+    //Если размер не задан строго, берется размер входного изображения cv::Mat
+    if(ImgHeight==-1 && ImgWidth==-1)
+    {
+        ImgHeight=image.rows;
+        ImgWidth=image.cols;
+    }
+    //Тензор с входным изображением с данными в формате char
+    tensorflow::Tensor NewOne(tensorflow::DataType::DT_UINT8, tensorflow::TensorShape({1,image.rows,image.cols,image.channels()}));
+    tensorflow::StringPiece tmp_data = NewOne.tensor_data();
+
+    //Перевод из BGR в RGB
+
+        cv::cvtColor(image, image, CV_BGR2RGB);
+
+
+    //Копирование данных из cv::Mat в входной тензор
+    memcpy(const_cast<char*>(tmp_data.data()), image.data, (unsigned long)(image.rows*image.cols*image.channels())*sizeof(char));
+
+    //Тензор со значениями нового размера изображения
+    tensorflow::Tensor SizeTensor(tensorflow::DataType::DT_INT32, tensorflow::TensorShape({2}));
+    SizeTensor.tensor<int32_t,1>()(0)=ImgHeight;
+    SizeTensor.tensor<int32_t,1>()(1)=ImgWidth;
+
+    //Запуск преобразования, передавая входное изображение и новые значения размера
+    Status = SessionForTransform->Run({{"input",NewOne},{"NewSize",SizeTensor}},{"out"},{},&OutputForTransform);
+    if(!Status.ok())
+    {
+        ErCode = TfErrorCode::BAD_STATUS;
+        return false;
+    }
+    //Установка входного тензора
     if(!SetInputTensor(OutputForTransform[0]))
     {
         return false;
@@ -353,33 +446,33 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 
 bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
 {
-    //РџСЂРѕРІРµСЂРєР° РЅР° РѕРїСЂРµРґРµР»РµРЅРёРµ РІС…РѕРґРЅС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ
+    //Проверка на определение входных параметров
     if(int(Divide)==0)
     {
         ErCode = DIVISION_BY_ZERO;
         return false;
     }
 
-    //РџСЂРѕРІРµСЂРєР° РЅР° СЂР°РІРµРЅСЃС‚РІРѕ РєРѕР»-РІР° РєР°РЅР°Р»РѕРІ РІС…РѕРґРЅРѕРіРѕ СѓР·Р»Р° Рё РёР·РѕР±СЂР°Р¶РµРЅРёСЏ С„РѕСЂРјР°С‚Р° cv::Mat
+    //Проверка на равенство кол-ва каналов входного узла и изображения формата cv::Mat
     if(ImgChan!=image.channels())
     {
         ErCode = CV_MAT_HAS_WRONG_CHANNELS_NUMBER;
         return false;
     }
 
-    //Р•СЃР»Рё СЂР°Р·РјРµСЂ РЅРµ Р·Р°РґР°РЅ СЃС‚СЂРѕРіРѕ, Р±РµСЂРµС‚СЃСЏ СЂР°Р·РјРµСЂ РІС…РѕРґРЅРѕРіРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
+    //Если размер не задан строго, берется размер входного изображения
     if(ImgHeight==-1 && ImgWidth==-1)
     {
         ImgHeight=image.rows;
         ImgWidth=image.cols;
     }
 
-    //РџРµСЂРµРІРѕРґ РёР· BGR РІ RGB
+    //Перевод из BGR в RGB
     cv::cvtColor(image, image, CV_BGR2RGB);
-    //РР·РјРµРЅРµРЅРёРµ СЂР°Р·РјРµСЂР°
+    //Изменение размера
     cv::resize(image,image,cv::Size(ImgWidth,ImgHeight));
 
-    //РР·РјРµРЅРµРЅРёРµ С‚РёРїР°. РќРµ РІСЃРµ С‚РёРїС‹ РїРѕРґРґРµСЂР¶РёРІР°СЋС‚СЃСЏ
+    //Изменение типа. Не все типы поддерживаются
     if(InputDataType==tensorflow::DataType::DT_FLOAT)
     {
         image.convertTo(image, CV_MAKETYPE(CV_32F,ImgChan));
@@ -394,16 +487,16 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
         return false;
     }
 
-    //Р’С‹С‡РёС‚Р°РЅРёРµ Рё РґРµР»РµРЅРёРµ
+    //Вычитание и деление
     image = image - double(Substract);
     image = image / double(Divide);
 
-    //РЎРѕС…СЂР°РЅРµРЅРёРµ РїРѕР»СѓС‡РµРЅРЅРѕРіРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РІ С‚РµРЅР·РѕСЂ
+    //Сохранение полученного изображения в тензор
     tensorflow::Tensor NewOne(InputDataType, tensorflow::TensorShape({1,image.rows,image.cols,image.channels()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
     memcpy(const_cast<char*>(tmp_data.data()), image.data, size_t(image.rows*image.cols*image.channels()*tensorflow::DataTypeSize(InputDataType)));
 
-    //РЈСЃС‚Р°РЅРѕРІРєР° РІС…РѕРґРЅРѕРіРѕ С‚РµРЅР·РѕСЂР°
+    //Установка входного тензора
     if(!SetInputTensor(NewOne))
     {
         return false;
@@ -415,20 +508,20 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
 
 bool TTfSession::Run(void)
 {
-    //РџСЂРѕРІРµСЂРєР° РЅР° РЅР°Р»РёС‡РёРµ РІС…РѕРґРЅРѕРіРѕ С‚РµРЅР·РѕСЂР°
+    //Проверка на наличие входного тензора
     if(Input.empty())
     {
         ErCode = EMPTY_INPUT_TENSOR;
         return false;
     }
-    //РџСЂРѕРІРµСЂРєР° РЅР° РЅР°Р»РёС‡РёРµ РёРјРµРЅРё РІС…РѕРґРЅРѕРіРѕ СѓР·Р»Р°
+    //Проверка на наличие имени входного узла
     if(OutputName.empty())
     {
         ErCode = EMPTY_OUTPUT_NAME;
         return false;
     }
 
-    //Р—Р°РїСѓСЃРє СЃРµСЃСЃРёРё
+    //Запуск сессии
     Status = Session->Run(Input, OutputName, {}, &Output);
     if(!Status.ok())
     {

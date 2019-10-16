@@ -6,11 +6,33 @@
 
 namespace RDK {
 
-class RDK_LIB_TYPE UTfClassifier: public RDK::UNet
+class UTfClassifier: public RDK::UNet
 {
-protected: // Свойства           
+protected: // Параметры
+ULProperty<std::string,UTfClassifier> ModelPath;
+
+ULProperty<std::string,UTfClassifier> InputNodeName;
+
+ULProperty<std::vector<std::string>,UTfClassifier> OutputNodeName;
+
+ULProperty<float,UTfClassifier> ImgDiv;
+
+ULProperty<float,UTfClassifier> ImgSub;
+
+ULProperty<double,UTfClassifier> GpuFraction;
+
+ULProperty<bool,UTfClassifier> GpuGrow;
+
+TTF::TTfSession TfObject;
+protected: // Входы и выходы
+UPropertyInputData<UBitmap,UTfClassifier, ptPubInput> InputImage;
+
+UPropertyOutputData<UBitmap,UTfClassifier> DebugImage;
 
 protected: // Переменные состояния
+ULProperty<int,UTfClassifier,ptPubState> NumberOfClass;
+ULProperty<float,UTfClassifier,ptPubState> DebugFloat;
+ULProperty<std::string,UTfClassifier,ptPubState> DebugString;
 
 public: // Методы
 // --------------------------
@@ -24,6 +46,19 @@ virtual ~UTfClassifier(void);
 // Методы управления параметрами
 // ---------------------
 // ---------------------
+bool SetModelPath(const std::string &value);
+
+bool SetInputNodeName(const std::string &value);
+
+bool SetOutputNodeName(const std::vector<std::string> &value);
+
+bool SetImgDiv(const float &value);
+
+bool SetImgSub(const float &value);
+
+bool SetGpuFraction(const double &value);
+
+bool SetGpuGrow(const bool &value);
 
 // ---------------------
 // Методы управления переменными состояния
@@ -35,10 +70,10 @@ virtual ~UTfClassifier(void);
 // --------------------------
 // Выделяет память для новой чистой копии объекта этого класса
 virtual UTfClassifier* New(void);
-// --------------------------        
+// --------------------------
 
 // --------------------------
-// Скрытые методы управления счетом 
+// Скрытые методы управления счетом
 // --------------------------
 protected:
 // Восстановление настроек по умолчанию и сброс процесса счета

@@ -45,7 +45,6 @@ windows {
 
 HEADERS += \
     ../../Core/Lib.h \
-    ../../Core/Interface/label_image.h \
     ../../Core/Interface/ttfsession.h \
     ../../Core/UTfClassifier.h
 
