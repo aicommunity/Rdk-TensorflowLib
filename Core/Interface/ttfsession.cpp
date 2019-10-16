@@ -255,6 +255,10 @@ bool TTfSession::SetImgParams(const float & sub, const float & div)
         ErCode = DIVISION_BY_ZERO;
         return false;
     }
+    if(Divide!=div || Substract!=sub)
+    {
+        IsTransSessCreated=false;
+    }
     Divide = div;
     Substract = sub;
     ErCode=OK;
@@ -318,14 +322,18 @@ bool TTfSession::SetInputDataTfMeth(const RDK::UBitmap& image)
         ImgWidth=image.GetWidth();
     }
     //Тензор с входным изображением с данными в формате char
-    tensorflow::Tensor NewOne(tensorflow::DataType::DT_UINT8, tensorflow::TensorShape({1,image.GetHeight(),image.GetWidth(),image.GetByteLength()}));
+    tensorflow::Tensor NewOne(tensorflow::DataType::DT_UINT8, tensorflow::TensorShape({1,image.GetHeight(),image.GetWidth(),image.GetPixelByteLength()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
-
     //Перевод из BGR в RGB
     //cv::cvtColor(image, image, CV_BGR2RGB);
+    if(image.GetData()==nullptr)
+    {
+        ErCode = TfErrorCode::COPY_DATA_FROM_NULL_PTR;
+        return false;
+    }
 
     //Копирование данных из cv::Mat в входной тензор
-    memcpy(const_cast<char*>(tmp_data.data()), (image.GetData()), (unsigned long)(image.GetByteLength())*sizeof(char));
+    memcpy(const_cast<char*>(tmp_data.data()), (image.GetData()), (unsigned long)(image.GetByteLength()));
 
     //Тензор со значениями нового размера изображения
     tensorflow::Tensor SizeTensor(tensorflow::DataType::DT_INT32, tensorflow::TensorShape({2}));
@@ -360,6 +368,8 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
         ErCode = DIVISION_BY_ZERO;
         return false;
     }
+
+
 
     //Был ли создан дополнительный граф для трансформации
     if(!IsTransSessCreated)

@@ -10,13 +10,13 @@ namespace RDK {
 // Конструкторы и деструкторы
 // --------------------------
 UTfClassifier::UTfClassifier(void)
-    : ModelPath("ModelPath",this),
-      InputNodeName("InputNodeName",this),
-      OutputNodeName("OutputNodeName",this),
-      ImgDiv("ImgDiv",this),
-      ImgSub("ImgSub",this),
-      GpuFraction("GpuFraction",this),
-      GpuGrow("GpuGrow",this),
+    : ModelPath("ModelPath",this, &UTfClassifier::SetModelPath),
+      InputNodeName("InputNodeName",this,&UTfClassifier::SetInputNodeName),
+      OutputNodeName("OutputNodeName",this,&UTfClassifier::SetOutputNodeName),
+      ImgDiv("ImgDiv",this,&UTfClassifier::SetImgDiv),
+      ImgSub("ImgSub",this,&UTfClassifier::SetImgSub),
+      GpuFraction("GpuFraction",this,&UTfClassifier::SetGpuFraction),
+      GpuGrow("GpuGrow",this,&UTfClassifier::SetGpuGrow),
       InputImage("InputImage",this),
       DebugImage("DebugImage",this),
       NumberOfClass("NumberOfClass", this),
@@ -38,49 +38,49 @@ UTfClassifier::~UTfClassifier(void)
 bool UTfClassifier::SetModelPath(const std::string &value)
 {
     Ready=false;
-    ModelPath=value;
+   // ModelPath=value;
     return true;
 }
 
 bool UTfClassifier::SetInputNodeName(const std::string &value)
 {
     Ready=false;
-    InputNodeName=value;
+    //InputNodeName=value;
     return true;
 }
 
 bool UTfClassifier::SetOutputNodeName(const std::vector<std::string> &value)
 {
     Ready=false;
-    OutputNodeName=value;
+    //OutputNodeName=value;
     return true;
 }
 
 bool UTfClassifier::SetImgDiv(const float &value)
 {
     Ready=false;
-    ImgDiv=value;
+    //ImgDiv=value;
     return true;
 }
 
 bool UTfClassifier::SetImgSub(const float &value)
 {
     Ready=false;
-    ImgSub=value;
+    //ImgSub=value;
     return true;
 }
 
 bool UTfClassifier::SetGpuFraction(const double &value)
 {
     Ready=false;
-    GpuFraction=value;
+    //GpuFraction=value;
     return true;
 }
 
 bool UTfClassifier::SetGpuGrow(const bool &value)
 {
     Ready=false;
-    GpuGrow=value;
+    //GpuGrow=value;
     return true;
 }
 
@@ -106,13 +106,13 @@ UTfClassifier* UTfClassifier::New(void)
 // Восстановление настроек по умолчанию и сброс процесса счета
 bool UTfClassifier::ADefault(void)
 {
-    ModelPath="/home/vladburin/1_Folder/TF/smth/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb";
+    ModelPath="";//"/home/vladburin/1_Folder/TF/smth/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb";
 
-    InputNodeName="input";
+    InputNodeName="";//"input";
 
-    OutputNodeName={"InceptionV3/Predictions/Reshape_1",};
+    OutputNodeName={"",};//{"InceptionV3/Predictions/Reshape_1",};
 
-    ImgDiv=255;
+    ImgDiv=1;//255;
 
     ImgSub=0;
 
@@ -128,24 +128,25 @@ bool UTfClassifier::ADefault(void)
 // в случае успешной сборки
 bool UTfClassifier::ABuild(void)
 {
+
     if(!TfObject.SetGraphParams(OutputNodeName,InputNodeName))
     {
         DebugString=TfObject.GetDebugStr();
-         NumberOfClass=2;
+        NumberOfClass=2;
         return true;
     }
 
     if(!TfObject.InitModel(std::string(ModelPath),GpuFraction,GpuGrow))
     {
         DebugString=TfObject.GetDebugStr();
-         NumberOfClass=1;
+        NumberOfClass=1;
         return true;
     }
 
     if(!TfObject.SetImgParams(ImgSub,ImgDiv))
     {
         DebugString=TfObject.GetDebugStr();
-         NumberOfClass=3;
+        NumberOfClass=3;
         return true;
     }
     NumberOfClass=4;
@@ -163,13 +164,13 @@ bool UTfClassifier::ACalculate(void)
 {
    UBitmap NewOne;
    NewOne.SetColorModel(ubmRGB24);
-   InputImage->ConvertTo(NewOne);
-
+   InputImage->SwapRGBChannels(&NewOne);
+/*
    cv::Mat m(NewOne.GetHeight(),NewOne.GetWidth(), CV_8UC3, NewOne.GetData());
 
    cv::Mat input;
-   m.copyTo(input);
-   if(!TfObject.SetInputDataTfMeth(input))
+   m.copyTo(input);*/
+   if(!TfObject.SetInputDataTfMeth(NewOne))
    {
        DebugString=TfObject.GetDebugStr();
        NumberOfClass=1;
