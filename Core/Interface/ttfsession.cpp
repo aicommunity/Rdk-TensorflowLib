@@ -360,6 +360,7 @@ bool TTfSession::SetInputDataTfMeth(const RDK::UBitmap& image)
 }
 
 
+
 bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 {
     //Проверка на определение входных параметров

@@ -9,20 +9,36 @@ namespace RDK {
 class UTfClassifier: public RDK::UNet
 {
 protected: // Параметры
-ULProperty<std::string,UTfClassifier> ModelPath;
+///Флаг отвечающий за тип загружаемой модели (true - pb модель, false - meta+ckpt модель)
+ULProperty<bool,UTfClassifier> UsePb;
 
+///Путь к модели нейронной сети (pb модель)
+ULProperty<std::string,UTfClassifier> PbModelPath;
+
+///Пути к модели нейронной сети (meta+ckpt модель)
+ULProperty<std::string,UTfClassifier> MetaModelPath;
+
+ULProperty<std::string,UTfClassifier> CkptPath;
+
+///Имя входного узла нейронной сети
 ULProperty<std::string,UTfClassifier> InputNodeName;
 
+///Массив имён выходных узлов нейронной сети
 ULProperty<std::vector<std::string>,UTfClassifier> OutputNodeName;
 
+///Делитель для данных изображения (нормализация)
 ULProperty<float,UTfClassifier> ImgDiv;
 
+///Вычитаемое из данных изображения (изображения)
 ULProperty<float,UTfClassifier> ImgSub;
 
+///Доля использования памяти GPU
 ULProperty<double,UTfClassifier> GpuFraction;
 
+///Флаг отвечающий за выделение памяти GPU по мере необходимости
 ULProperty<bool,UTfClassifier> GpuGrow;
 
+///Объект для использования моделей нейронных сетей
 TTF::TTfSession TfObject;
 protected: // Входы и выходы
 UPropertyInputData<UBitmap,UTfClassifier, ptPubInput> InputImage;
@@ -30,9 +46,15 @@ UPropertyInputData<UBitmap,UTfClassifier, ptPubInput> InputImage;
 UPropertyOutputData<UBitmap,UTfClassifier> DebugImage;
 
 protected: // Переменные состояния
+
 ULProperty<int,UTfClassifier,ptPubState> NumberOfClass;
+
 ULProperty<float,UTfClassifier,ptPubState> DebugFloat;
+
 ULProperty<std::string,UTfClassifier,ptPubState> DebugString;
+
+///Флаг, отвечающий за успешную сборку
+bool BuildDone;
 
 public: // Методы
 // --------------------------
@@ -46,7 +68,15 @@ virtual ~UTfClassifier(void);
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-bool SetModelPath(const std::string &value);
+
+
+bool SetUsePb(const bool &value);
+
+bool SetMetaModelPath(const std::string &value);
+
+bool SetCkptPath(const std::string &value);
+
+bool SetPbModelPath(const std::string &value);
 
 bool SetInputNodeName(const std::string &value);
 

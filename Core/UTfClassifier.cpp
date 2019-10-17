@@ -10,7 +10,10 @@ namespace RDK {
 // Конструкторы и деструкторы
 // --------------------------
 UTfClassifier::UTfClassifier(void)
-    : ModelPath("ModelPath",this, &UTfClassifier::SetModelPath),
+    : UsePb("UsePb", this, &UTfClassifier::SetUsePb),
+      PbModelPath("PbModelPath",this, &UTfClassifier::SetPbModelPath),
+      MetaModelPath("MetaModelPath",this, &UTfClassifier::SetMetaModelPath),
+      CkptPath("CkptPath",this,&UTfClassifier::SetCkptPath),
       InputNodeName("InputNodeName",this,&UTfClassifier::SetInputNodeName),
       OutputNodeName("OutputNodeName",this,&UTfClassifier::SetOutputNodeName),
       ImgDiv("ImgDiv",this,&UTfClassifier::SetImgDiv),
@@ -21,8 +24,10 @@ UTfClassifier::UTfClassifier(void)
       DebugImage("DebugImage",this),
       NumberOfClass("NumberOfClass", this),
       DebugFloat("DebugFloat",this),
-      DebugString("DebugString",this)
+      DebugString("DebugString",this),
+      BuildDone(false)
 {
+
 }
 
 UTfClassifier::~UTfClassifier(void)
@@ -35,52 +40,63 @@ UTfClassifier::~UTfClassifier(void)
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-bool UTfClassifier::SetModelPath(const std::string &value)
+bool UTfClassifier::SetUsePb(const bool &value)
 {
     Ready=false;
-   // ModelPath=value;
+    return true;
+}
+
+bool UTfClassifier::SetMetaModelPath(const std::string &value)
+{
+    Ready=false;
+    return true;
+}
+
+bool UTfClassifier::SetCkptPath(const std::string &value)
+{
+    Ready=false;
+    return true;
+}
+
+bool UTfClassifier::SetPbModelPath(const std::string &value)
+{
+    Ready=false;
     return true;
 }
 
 bool UTfClassifier::SetInputNodeName(const std::string &value)
 {
     Ready=false;
-    //InputNodeName=value;
     return true;
 }
 
 bool UTfClassifier::SetOutputNodeName(const std::vector<std::string> &value)
 {
     Ready=false;
-    //OutputNodeName=value;
     return true;
 }
 
 bool UTfClassifier::SetImgDiv(const float &value)
 {
     Ready=false;
-    //ImgDiv=value;
     return true;
 }
 
 bool UTfClassifier::SetImgSub(const float &value)
 {
     Ready=false;
-    //ImgSub=value;
     return true;
 }
 
 bool UTfClassifier::SetGpuFraction(const double &value)
 {
     Ready=false;
-    //GpuFraction=value;
     return true;
 }
 
 bool UTfClassifier::SetGpuGrow(const bool &value)
 {
     Ready=false;
-    //GpuGrow=value;
     return true;
 }
 
@@ -106,19 +122,26 @@ UTfClassifier* UTfClassifier::New(void)
 // Восстановление настроек по умолчанию и сброс процесса счета
 bool UTfClassifier::ADefault(void)
 {
-    ModelPath="";//"/home/vladburin/1_Folder/TF/smth/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb";
+    UsePb=true;
 
-    InputNodeName="";//"input";
+    MetaModelPath="";
 
-    OutputNodeName={"",};//{"InceptionV3/Predictions/Reshape_1",};
+    CkptPath="";
 
-    ImgDiv=1;//255;
+    PbModelPath="";
+
+    InputNodeName="";
+
+    OutputNodeName={"",};
+
+    ImgDiv=1;
 
     ImgSub=0;
 
     GpuFraction=0.5;
 
     GpuGrow=false;
+
     return true;
 }
 
@@ -128,28 +151,44 @@ bool UTfClassifier::ADefault(void)
 // в случае успешной сборки
 bool UTfClassifier::ABuild(void)
 {
-
+    //Задание параметров модели нейросети
     if(!TfObject.SetGraphParams(OutputNodeName,InputNodeName))
     {
         DebugString=TfObject.GetDebugStr();
-        NumberOfClass=2;
+        BuildDone=false;
         return true;
     }
 
-    if(!TfObject.InitModel(std::string(ModelPath),GpuFraction,GpuGrow))
+    //Загрузка модели нейросети
+    if(UsePb)
     {
-        DebugString=TfObject.GetDebugStr();
-        NumberOfClass=1;
-        return true;
+        if(!TfObject.InitModel(PbModelPath,GpuFraction,GpuGrow))
+        {
+            DebugString=TfObject.GetDebugStr();
+            BuildDone=false;
+            return true;
+        }
+    }
+    else
+    {
+        if(!TfObject.InitModel(MetaModelPath,CkptPath,GpuFraction,GpuGrow))
+        {
+            DebugString=TfObject.GetDebugStr();
+            BuildDone=false;
+            return true;
+        }
     }
 
+    //Установка параметров нормализации
     if(!TfObject.SetImgParams(ImgSub,ImgDiv))
     {
         DebugString=TfObject.GetDebugStr();
-        NumberOfClass=3;
+        BuildDone=false;
         return true;
     }
-    NumberOfClass=4;
+
+    DebugString=TfObject.GetDebugStr();
+    BuildDone=true;
     return true;
 }
 
@@ -162,14 +201,25 @@ bool UTfClassifier::AReset(void)
 // Выполняет расчет этого объекта
 bool UTfClassifier::ACalculate(void)
 {
+   //Если модель собрана с ошибками
+   if(!BuildDone)
+   {
+       DebugString=TfObject.GetDebugStr();
+       return false;
+   }
+
+   //Преобразование UbitMap изображения в формат RGB
    UBitmap NewOne;
    NewOne.SetColorModel(ubmRGB24);
    InputImage->SwapRGBChannels(&NewOne);
+
 /*
    cv::Mat m(NewOne.GetHeight(),NewOne.GetWidth(), CV_8UC3, NewOne.GetData());
 
    cv::Mat input;
    m.copyTo(input);*/
+
+   //Преобразование входного изображения под нужный размер
    if(!TfObject.SetInputDataTfMeth(NewOne))
    {
        DebugString=TfObject.GetDebugStr();
@@ -177,16 +227,17 @@ bool UTfClassifier::ACalculate(void)
        return true;
    }
 
+   //Запуск рассчёта нейросети
    if(!TfObject.Run())
    {
        DebugString=TfObject.GetDebugStr();
        NumberOfClass=2;
        return true;
    }
-   DebugFloat=TfObject.GetOutput()[0].matrix<float>()(0,653);
-   NumberOfClass=10;//TfObject.GetOutput().size();
-   //TfObject.GetOutput()[0].matrix<float,1>()(653);
 
+   //Получение полученного результата (выхода нейросети)
+   DebugFloat=TfObject.GetOutput()[0].matrix<float>()(0,653);
+   NumberOfClass=10;
    DebugString=TfObject.GetOutput()[0].DebugString();
 
     return true;

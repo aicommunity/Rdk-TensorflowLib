@@ -128,7 +128,8 @@ protected:
         "Set output node name with SetGraphParams",
         "Some of output nodes wasn't found in the graph",
         "Number of channels in input cv::mat doesn't equal to input tensor channel number",
-        "This data type are not supported for SetInputDataCvMeth. Use SetInputDataTfMeth"
+        "This data type are not supported for SetInputDataCvMeth. Use SetInputDataTfMeth",
+        "Please, check that pointer you try to copy from is exist"
     };
 
 public:
