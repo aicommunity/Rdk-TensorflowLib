@@ -1,60 +1,44 @@
 #ifndef RDK_UTFCLASSIFIER_H
 #define RDK_UTFCLASSIFIER_H
 
-#include "../../../Rdk/Deploy/Include/rdk.h"
-#include "Interface/ttfsession.h"
+#include "UTfComponent.h"
 
 namespace RDK {
 
-class UTfClassifier: public RDK::UNet
+class UTfClassifier: public UTfComponent
 {
 protected: // Параметры
-///Флаг отвечающий за тип загружаемой модели (true - pb модель, false - meta+ckpt модель)
-ULProperty<bool,UTfClassifier> UsePb;
 
-///Путь к модели нейронной сети (pb модель)
-ULProperty<std::string,UTfClassifier> PbModelPath;
-
-///Пути к модели нейронной сети (meta+ckpt модель)
-ULProperty<std::string,UTfClassifier> MetaModelPath;
-
-ULProperty<std::string,UTfClassifier> CkptPath;
-
-///Имя входного узла нейронной сети
-ULProperty<std::string,UTfClassifier> InputNodeName;
-
-///Массив имён выходных узлов нейронной сети
-ULProperty<std::vector<std::string>,UTfClassifier> OutputNodeName;
-
-///Делитель для данных изображения (нормализация)
-ULProperty<float,UTfClassifier> ImgDiv;
-
-///Вычитаемое из данных изображения (изображения)
-ULProperty<float,UTfClassifier> ImgSub;
-
-///Доля использования памяти GPU
-ULProperty<double,UTfClassifier> GpuFraction;
-
-///Флаг отвечающий за выделение памяти GPU по мере необходимости
-ULProperty<bool,UTfClassifier> GpuGrow;
-
-///Объект для использования моделей нейронных сетей
-TTF::TTfSession TfObject;
 protected: // Входы и выходы
+
+/// Входное изображение
+/// Игнорируется, если подключен векторный вход InputImages
 UPropertyInputData<UBitmap,UTfClassifier, ptPubInput> InputImage;
 
-UPropertyOutputData<UBitmap,UTfClassifier> DebugImage;
+/// Массив входных изображений
+UPropertyInputData<std::vector<UBitmap>, UTfClassifier, ptPubInput> InputImages;
+
+/// Количество классов объектов (какой размер будет у вектора)
+ULProperty<int,UTfClassifier, ptPubParameter> NumClasses;
+
+///Порог уверенности: если класс не превышает порога уверенности, то он выставляется в 0, все классы выставляются в 0.
+///TODO: Это пихать ДО OneHot'а. И проверить, чтобы класс выдавало в виде '-1', а уверенности все 0
+ULProperty<double,UTfClassifier, ptPubParameter> ConfidenceThreshold;
+
+/// Выходная матрица с классами объектов
+UPropertyOutputData<MDMatrix<int>,UTfClassifier, ptPubOutput> OutputClasses;
+
+/// Выходная матрица. Количество столбцов по числу объектов, количество строк в столбце по числу классов
+/// Каждое значение - уверенность класса
+UPropertyOutputData<MDMatrix<double>, UTfClassifier> OutputConfidences;
+
+/// Время, затраченное на классификацию, секунды
+ULProperty<double,UTfClassifier, ptPubState> ClassificationTime;
+
+UPropertyOutputData<UBitmap,UTfComponent, ptPubOutput> DebugImage;
 
 protected: // Переменные состояния
 
-ULProperty<int,UTfClassifier,ptPubState> NumberOfClass;
-
-ULProperty<float,UTfClassifier,ptPubState> DebugFloat;
-
-ULProperty<std::string,UTfClassifier,ptPubState> DebugString;
-
-///Флаг, отвечающий за успешную сборку
-bool BuildDone;
 
 public: // Методы
 // --------------------------
@@ -68,27 +52,6 @@ virtual ~UTfClassifier(void);
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-
-
-bool SetUsePb(const bool &value);
-
-bool SetMetaModelPath(const std::string &value);
-
-bool SetCkptPath(const std::string &value);
-
-bool SetPbModelPath(const std::string &value);
-
-bool SetInputNodeName(const std::string &value);
-
-bool SetOutputNodeName(const std::vector<std::string> &value);
-
-bool SetImgDiv(const float &value);
-
-bool SetImgSub(const float &value);
-
-bool SetGpuFraction(const double &value);
-
-bool SetGpuGrow(const bool &value);
 
 // ---------------------
 // Методы управления переменными состояния
@@ -107,21 +70,19 @@ virtual UTfClassifier* New(void);
 // --------------------------
 protected:
 // Восстановление настроек по умолчанию и сброс процесса счета
-virtual bool ADefault(void);
-
-// Обеспечивает сборку внутренней структуры объекта
-// после настройки параметров
-// Автоматически вызывает метод Reset() и выставляет Ready в true
-// в случае успешной сборки
-virtual bool ABuild(void);
+virtual bool ATfDefault(void);
 
 // Сброс процесса счета без потери настроек
-virtual bool AReset(void);
+virtual bool ATfReset(void);
 
 // Выполняет расчет этого объекта
-virtual bool ACalculate(void);
+virtual bool ATfCalculate(void);
 // --------------------------
+/// Обрабатывает одно изображение
+virtual bool ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confidences, double conf_thresh, int &class_id, bool &is_classified);
+
 };
+
 
 
 }

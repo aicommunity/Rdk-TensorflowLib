@@ -3,29 +3,25 @@
 
 #include "UTfClassifier.h"
 
+
+#define CLASS_UNDEFINED -2
+#define CLASS_LOWQUAL -3
+
 namespace RDK {
 
 // Методы
 // --------------------------
 // Конструкторы и деструкторы
 // --------------------------
-UTfClassifier::UTfClassifier(void)
-    : UsePb("UsePb", this, &UTfClassifier::SetUsePb),
-      PbModelPath("PbModelPath",this, &UTfClassifier::SetPbModelPath),
-      MetaModelPath("MetaModelPath",this, &UTfClassifier::SetMetaModelPath),
-      CkptPath("CkptPath",this,&UTfClassifier::SetCkptPath),
-      InputNodeName("InputNodeName",this,&UTfClassifier::SetInputNodeName),
-      OutputNodeName("OutputNodeName",this,&UTfClassifier::SetOutputNodeName),
-      ImgDiv("ImgDiv",this,&UTfClassifier::SetImgDiv),
-      ImgSub("ImgSub",this,&UTfClassifier::SetImgSub),
-      GpuFraction("GpuFraction",this,&UTfClassifier::SetGpuFraction),
-      GpuGrow("GpuGrow",this,&UTfClassifier::SetGpuGrow),
-      InputImage("InputImage",this),
-      DebugImage("DebugImage",this),
-      NumberOfClass("NumberOfClass", this),
-      DebugFloat("DebugFloat",this),
-      DebugString("DebugString",this),
-      BuildDone(false)
+UTfClassifier::UTfClassifier(void):
+    InputImage("InputImage",this),
+    InputImages("InputImages",this),
+    OutputClasses("OutputClasses",this),
+    NumClasses("NumClasses",this),
+    ConfidenceThreshold("ConfidenceThreshold", this),
+    OutputConfidences("OutputConfidences", this),
+    ClassificationTime("ClassificationTime",this),
+    DebugImage("DebugImage",this)
 {
 
 }
@@ -40,65 +36,6 @@ UTfClassifier::~UTfClassifier(void)
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-bool UTfClassifier::SetUsePb(const bool &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfClassifier::SetMetaModelPath(const std::string &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfClassifier::SetCkptPath(const std::string &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfClassifier::SetPbModelPath(const std::string &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfClassifier::SetInputNodeName(const std::string &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfClassifier::SetOutputNodeName(const std::vector<std::string> &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfClassifier::SetImgDiv(const float &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfClassifier::SetImgSub(const float &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfClassifier::SetGpuFraction(const double &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfClassifier::SetGpuGrow(const bool &value)
-{
-    Ready=false;
-    return true;
-}
 
 // ---------------------
 // Методы управления переменными состояния
@@ -120,129 +57,135 @@ UTfClassifier* UTfClassifier::New(void)
 // Скрытые методы управления счетом
 // --------------------------
 // Восстановление настроек по умолчанию и сброс процесса счета
-bool UTfClassifier::ADefault(void)
+bool UTfClassifier::ATfDefault(void)
 {
-    UsePb=true;
-
-    MetaModelPath="";
-
-    CkptPath="";
-
-    PbModelPath="";
-
-    InputNodeName="";
-
-    OutputNodeName={"",};
-
-    ImgDiv=1;
-
-    ImgSub=0;
-
-    GpuFraction=0.5;
-
-    GpuGrow=false;
-
-    return true;
-}
-
-// Обеспечивает сборку внутренней структуры объекта
-// после настройки параметров
-// Автоматически вызывает метод Reset() и выставляет Ready в true
-// в случае успешной сборки
-bool UTfClassifier::ABuild(void)
-{
-    //Задание параметров модели нейросети
-    if(!TfObject.SetGraphParams(OutputNodeName,InputNodeName))
-    {
-        DebugString=TfObject.GetDebugStr();
-        BuildDone=false;
-        return true;
-    }
-
-    //Загрузка модели нейросети
-    if(UsePb)
-    {
-        if(!TfObject.InitModel(PbModelPath,GpuFraction,GpuGrow))
-        {
-            DebugString=TfObject.GetDebugStr();
-            BuildDone=false;
-            return true;
-        }
-    }
-    else
-    {
-        if(!TfObject.InitModel(MetaModelPath,CkptPath,GpuFraction,GpuGrow))
-        {
-            DebugString=TfObject.GetDebugStr();
-            BuildDone=false;
-            return true;
-        }
-    }
-
-    //Установка параметров нормализации
-    if(!TfObject.SetImgParams(ImgSub,ImgDiv))
-    {
-        DebugString=TfObject.GetDebugStr();
-        BuildDone=false;
-        return true;
-    }
-
-    DebugString=TfObject.GetDebugStr();
-    BuildDone=true;
+    NumClasses=4;
     return true;
 }
 
 // Сброс процесса счета без потери настроек
-bool UTfClassifier::AReset(void)
+bool UTfClassifier::ATfReset(void)
 {
- return true;
+    ClassificationTime=0.0;
+    OutputClasses->Resize(0,1);
+    OutputConfidences->Resize(0, NumClasses);
+    return true;
 }
 
 // Выполняет расчет этого объекта
-bool UTfClassifier::ACalculate(void)
+bool UTfClassifier::ATfCalculate(void)
 {
-   //Если модель собрана с ошибками
-   if(!BuildDone)
-   {
-       DebugString=TfObject.GetDebugStr();
-       return false;
-   }
+    ClassificationTime=0.0;
+    clock_t start_frame = clock();
 
-   //Преобразование UbitMap изображения в формат RGB
-   UBitmap NewOne;
-   NewOne.SetColorModel(ubmRGB24);
-   InputImage->SwapRGBChannels(&NewOne);
+    if(InputImages.IsConnected() && InputImages->size()>0)
+    {
+        OutputClasses->Assign(InputImages->size(),1, CLASS_UNDEFINED);
+        OutputConfidences->Assign(InputImages->size(), NumClasses,0.0);
+        for(int i=0; i<InputImages->size(); i++)
+        {
+            UBitmap &bmp = (*InputImages)[i];
 
-/*
-   cv::Mat m(NewOne.GetHeight(),NewOne.GetWidth(), CV_8UC3, NewOne.GetData());
+            MDVector<double> output_confidences;
+            int class_id;
+            bool is_classified;
+            bool classify_res=ClassifyBitmap(bmp, output_confidences, ConfidenceThreshold, class_id, is_classified);
 
-   cv::Mat input;
-   m.copyTo(input);*/
+            if(classify_res)
+            {
+                for(int k=0; k<output_confidences.GetSize(); k++)
+                {
+                   (*OutputConfidences)(i, k) = output_confidences(k);
+                }
+                (*OutputClasses)[i] = (is_classified)?class_id:CLASS_LOWQUAL;
+            }
+        }
+    }
+    else
+    {
+        if(InputImage.IsConnected())
+        {
+            OutputClasses->Assign(1,1, CLASS_UNDEFINED);
+            OutputConfidences->Assign(1, NumClasses,0.0);
+            UBitmap &bmp = *InputImage;
 
-   //Преобразование входного изображения под нужный размер
-   if(!TfObject.SetInputDataTfMeth(NewOne))
-   {
-       DebugString=TfObject.GetDebugStr();
-       NumberOfClass=1;
-       return true;
-   }
+            MDVector<double> output_confidences;
+            int class_id;
+            bool is_classified;
+            bool classify_res=ClassifyBitmap(bmp, output_confidences, ConfidenceThreshold, class_id, is_classified);
 
-   //Запуск рассчёта нейросети
-   if(!TfObject.Run())
-   {
-       DebugString=TfObject.GetDebugStr();
-       NumberOfClass=2;
-       return true;
-   }
+            for(int k=0; k<output_confidences.GetSize(); k++)
+            {
+                (*OutputConfidences)(0, k) = output_confidences(k);
+            }
 
-   //Получение полученного результата (выхода нейросети)
-   DebugFloat=TfObject.GetOutput()[0].matrix<float>()(0,653);
-   NumberOfClass=10;
-   DebugString=TfObject.GetOutput()[0].DebugString();
+            (*OutputClasses)[0] = (is_classified)?class_id:CLASS_LOWQUAL;
+        }
+    }
 
+    clock_t end_frame = clock();
+    ClassificationTime = ((double) (end_frame - start_frame)) / CLOCKS_PER_SEC;
     return true;
 }
 // --------------------------
+
+bool UTfClassifier::ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confidences, double conf_thresh, int &class_id, bool &is_classified)
+{
+    //Обрабатываем иображение для входа
+    if(!TfObject.SetInputDataTfMeth(*InputImage))
+    {
+        DebugString=TfObject.GetDebugStr();
+        return true;
+    }
+
+    //Запуск рассчёта нейросети
+    if(!TfObject.Run())
+    {
+        DebugString=TfObject.GetDebugStr();
+        return true;
+    }
+
+    std::vector<float> result;
+
+    for(int i=0; i<TfObject.GetOutput()[0].dim_size(1); i++)
+    {
+        result.push_back(TfObject.GetOutput()[0].matrix<float>()(0,i));
+    }
+
+    if(result.size()!=NumClasses)
+    {
+        DebugString="Number of classes is wrong";
+        return true;
+    }
+
+    int max_id = -1;
+    double max_conf = -100;
+
+    output_confidences.Resize(result.size());
+
+    for(int k=0; k<result.size(); k++)
+    {
+        output_confidences(k) = result[k];
+        if(result[k]>max_conf)
+        {
+            max_conf = result[k];
+            max_id = k;
+        }
+    }
+
+    if(max_conf<conf_thresh)
+    {
+        is_classified=false;
+    }
+    else
+    {
+        is_classified=true;
+    }
+
+    class_id = max_id;
+
+    return true;
+}
 
 }
 #endif

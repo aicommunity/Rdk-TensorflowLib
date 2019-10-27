@@ -38,9 +38,9 @@ bool TTfSession::CheckInOutNodes()
     InputDataType = Node.attr().at("dtype").type();
     ImgHeight =     int(Node.attr().at("shape").shape().dim(1).size());
     ImgWidth  =     int(Node.attr().at("shape").shape().dim(2).size());
-    ImgChan  =      int(Node.attr().at("shape").shape().dim(3).size());
+    ImgChannels  =  int(Node.attr().at("shape").shape().dim(3).size());
 
-    //Проверка на сущетсвование выходного узла
+    //Проверка на существование выходного узла
     for(uint j=0; j < OutputName.size(); j++)
     {
         for(int i=0; i<GraphDef.node_size();i++)
@@ -185,7 +185,7 @@ bool TTfSession::UnInit(void)
     }
 
     ImgWidth=ImgHeight=-1;
-    ImgChan=0;
+    ImgChannels=0;
     Divide=Substract=0;
 
     InputName.clear();
@@ -265,10 +265,25 @@ bool TTfSession::SetImgParams(const float & sub, const float & div)
     return true;
 }
 
-bool TTfSession::SetInputDataTfMeth(const RDK::UBitmap& image)
+bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
 {
+    //Преобразование UbitMap изображения в формат RGB
+    RDK::UBitmap input;
+    input.SetRes(image.GetWidth(), image.GetHeight(), image.GetColorModel());
+    image.CopyTo(0,0,input);
+    if(image.GetColorModel() == RDK::ubmRGB24)
+    {
+        image.SwapRGBChannels(&input);
+    }
+
+    if(ImgChannels!=input.GetPixelByteLength())
+    {
+        ErCode = WRONG_IMAGE_CHANNELS_NUMBER;
+        return false;
+    }
+
     //Проверка на определение входных параметров
-    if(int(Divide)==0)
+    if((Divide)==0.0f)
     {
         ErCode = DIVISION_BY_ZERO;
         return false;
@@ -318,22 +333,22 @@ bool TTfSession::SetInputDataTfMeth(const RDK::UBitmap& image)
     //Если размер не задан строго, берется размер входного изображения cv::Mat
     if(ImgHeight==-1 && ImgWidth==-1)
     {
-        ImgHeight=image.GetHeight();
-        ImgWidth=image.GetWidth();
+        ImgHeight=input.GetHeight();
+        ImgWidth=input.GetWidth();
     }
     //Тензор с входным изображением с данными в формате char
-    tensorflow::Tensor NewOne(tensorflow::DataType::DT_UINT8, tensorflow::TensorShape({1,image.GetHeight(),image.GetWidth(),image.GetPixelByteLength()}));
+    tensorflow::Tensor NewOne(tensorflow::DataType::DT_UINT8, tensorflow::TensorShape({1,input.GetHeight(),input.GetWidth(),input.GetPixelByteLength()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
     //Перевод из BGR в RGB
     //cv::cvtColor(image, image, CV_BGR2RGB);
-    if(image.GetData()==nullptr)
+    if(input.GetData()==nullptr)
     {
         ErCode = TfErrorCode::COPY_DATA_FROM_NULL_PTR;
         return false;
     }
 
     //Копирование данных из cv::Mat в входной тензор
-    memcpy(const_cast<char*>(tmp_data.data()), (image.GetData()), (unsigned long)(image.GetByteLength()));
+    memcpy(const_cast<char*>(tmp_data.data()), (input.GetData()), (unsigned long)(input.GetByteLength()));
 
     //Тензор со значениями нового размера изображения
     tensorflow::Tensor SizeTensor(tensorflow::DataType::DT_INT32, tensorflow::TensorShape({2}));
@@ -359,12 +374,10 @@ bool TTfSession::SetInputDataTfMeth(const RDK::UBitmap& image)
     return true;
 }
 
-
-
 bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 {
     //Проверка на определение входных параметров
-    if(int(Divide)==0)
+    if((Divide)==0.0f)
     {
         ErCode = DIVISION_BY_ZERO;
         return false;
@@ -424,12 +437,16 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
 
     //Перевод из BGR в RGB
-
-        cv::cvtColor(image, image, CV_BGR2RGB);
+    cv::Mat input;
+    image.copyTo(input);
+    if(input.channels()>1)
+    {
+        cv::cvtColor(image, input, CV_BGR2RGB);
+    }
 
 
     //Копирование данных из cv::Mat в входной тензор
-    memcpy(const_cast<char*>(tmp_data.data()), image.data, (unsigned long)(image.rows*image.cols*image.channels())*sizeof(char));
+    memcpy(const_cast<char*>(tmp_data.data()), input.data, (unsigned long)(input.rows*input.cols*input.channels())*sizeof(char));
 
     //Тензор со значениями нового размера изображения
     tensorflow::Tensor SizeTensor(tensorflow::DataType::DT_INT32, tensorflow::TensorShape({2}));
@@ -458,16 +475,16 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
 {
     //Проверка на определение входных параметров
-    if(int(Divide)==0)
+    if((Divide)==0.0)
     {
         ErCode = DIVISION_BY_ZERO;
         return false;
     }
 
     //Проверка на равенство кол-ва каналов входного узла и изображения формата cv::Mat
-    if(ImgChan!=image.channels())
+    if(ImgChannels!=image.channels())
     {
-        ErCode = CV_MAT_HAS_WRONG_CHANNELS_NUMBER;
+        ErCode = WRONG_IMAGE_CHANNELS_NUMBER;
         return false;
     }
 
@@ -477,20 +494,24 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
         ImgHeight=image.rows;
         ImgWidth=image.cols;
     }
-
+    cv::Mat input;
+    image.copyTo(input);
     //Перевод из BGR в RGB
-    cv::cvtColor(image, image, CV_BGR2RGB);
+    if(input.channels()>1)
+    {
+        cv::cvtColor(image, input, CV_BGR2RGB);
+    }
     //Изменение размера
-    cv::resize(image,image,cv::Size(ImgWidth,ImgHeight));
+    cv::resize(input,input,cv::Size(ImgWidth,ImgHeight));
 
     //Изменение типа. Не все типы поддерживаются
     if(InputDataType==tensorflow::DataType::DT_FLOAT)
     {
-        image.convertTo(image, CV_MAKETYPE(CV_32F,ImgChan));
+        input.convertTo(input, CV_MAKETYPE(CV_32F,ImgChannels));
     }
     else if(InputDataType==tensorflow::DataType::DT_UINT8)
     {
-        image.convertTo(image, CV_MAKETYPE(CV_8U,ImgChan));
+        input.convertTo(input, CV_MAKETYPE(CV_8U,ImgChannels));
     }
     else
     {
@@ -499,13 +520,13 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     }
 
     //Вычитание и деление
-    image = image - double(Substract);
-    image = image / double(Divide);
+    input = input - double(Substract);
+    input = input / double(Divide);
 
     //Сохранение полученного изображения в тензор
-    tensorflow::Tensor NewOne(InputDataType, tensorflow::TensorShape({1,image.rows,image.cols,image.channels()}));
+    tensorflow::Tensor NewOne(InputDataType, tensorflow::TensorShape({1,input.rows,input.cols,input.channels()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
-    memcpy(const_cast<char*>(tmp_data.data()), image.data, size_t(image.rows*image.cols*image.channels()*tensorflow::DataTypeSize(InputDataType)));
+    memcpy(const_cast<char*>(tmp_data.data()), input.data, size_t(input.rows*input.cols*input.channels()*tensorflow::DataTypeSize(InputDataType)));
 
     //Установка входного тензора
     if(!SetInputTensor(NewOne))

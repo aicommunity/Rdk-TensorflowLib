@@ -37,7 +37,7 @@ enum TfErrorCode{
     DIVISION_BY_ZERO,
     EMPTY_OUTPUT_NAME,
     OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH,
-    CV_MAT_HAS_WRONG_CHANNELS_NUMBER,
+    WRONG_IMAGE_CHANNELS_NUMBER,
     TYPE_UNSOPPORTED_FOR_CV_METH,
     COPY_DATA_FROM_NULL_PTR
 };
@@ -77,7 +77,7 @@ protected:
     std::string InputName="";
 
     ///Делитель входного тензора (нужен для нормализации)
-    float Divide=0;
+    float Divide=1;
 
     ///Вычитаемое из входного тензора (нужен для нормализации)
     float Substract=0;
@@ -92,7 +92,7 @@ protected:
     int ImgWidth=-1;
 
     ///Кол-во каналов входного изображения (тензора)
-    int ImgChan=0;
+    int ImgChannels=0;
 
     ///Флаг, указывающий была ли сделана сессия для трансформации
     bool IsTransSessCreated = false;
@@ -127,7 +127,7 @@ protected:
         "Division by zero. Set image parameters with SetImgParams",
         "Set output node name with SetGraphParams",
         "Some of output nodes wasn't found in the graph",
-        "Number of channels in input cv::mat doesn't equal to input tensor channel number",
+        "Number of channels in input doesn't equal to input tensor channel number",
         "This data type are not supported for SetInputDataCvMeth. Use SetInputDataTfMeth",
         "Please, check that pointer you try to copy from is exist"
     };
@@ -198,7 +198,7 @@ public:
      * Полученный тензор записывается в InputTensor экземпляра класса.
      * \param image входное изображение в формате cv::Mat
      */
-    bool SetInputDataTfMeth(const RDK::UBitmap& image);
+    bool SetInputDataTfMeth(RDK::UBitmap& image);
 
     /*!
      * \brief Преобразовывает cv::Mat в тензор.

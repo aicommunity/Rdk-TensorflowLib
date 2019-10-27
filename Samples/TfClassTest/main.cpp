@@ -47,6 +47,10 @@ int main(int argc, char *argv[])
     StopIfBad(FirstExample.Run());
 
     Result1 = FirstExample.GetOutput();
+    std::cout << FirstExample.GetOutput()[0].dims() <<std::endl;
+    std::cout << FirstExample.GetOutput()[0].shape() <<std::endl;
+    std::cout << FirstExample.GetOutput()[0].dim_size(0) <<std::endl;
+    std::cout << FirstExample.GetOutput()[0].dim_size(1) <<std::endl;
 
     print_status = PrintTopLabels(Result1, labels);
 
