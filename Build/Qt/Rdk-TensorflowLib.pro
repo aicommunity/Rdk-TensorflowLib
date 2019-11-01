@@ -47,14 +47,16 @@ HEADERS += \
     ../../Core/Lib.h \
     ../../Core/Interface/ttfsession.h \
     ../../Core/UTfComponent.h  \
-    ../../Core/UTfClassifier.h
+    ../../Core/UTfClassifier.h  \
+    ../../Core/UTfDetector.h  \
 
 
 SOURCES += \
     ../../Core/Lib.cpp \
     ../../Core/Interface/ttfsession.cpp \
     ../../Core/UTfComponent.cpp \
-    ../../Core/UTfClassifier.cpp
+    ../../Core/UTfClassifier.cpp \
+    ../../Core/UTfDetector.cpp  \
 
 
 #including opencv

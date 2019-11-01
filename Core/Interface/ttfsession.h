@@ -64,6 +64,9 @@ protected:
     ///Статус
     tensorflow::Status Status=Status.OK();
 
+    ///Какая модель используется
+    bool UsePb;
+
     ///Класс, где хранится сам граф
     tensorflow::GraphDef GraphDef;
 
@@ -80,7 +83,7 @@ protected:
     float Divide=1;
 
     ///Вычитаемое из входного тензора (нужен для нормализации)
-    float Substract=0;
+    std::vector <float> Substract={0,0,0};
 
     ///Тип данных входного тензора
     tensorflow::DataType InputDataType;
@@ -93,6 +96,9 @@ protected:
 
     ///Кол-во каналов входного изображения (тензора)
     int ImgChannels=0;
+
+    ///В случае 3-ех канальнго изображения, отвечает за модель цвета (BGR-treu, RGB-false)
+    bool ImgBgr=false;
 
     ///Флаг, указывающий была ли сделана сессия для трансформации
     bool IsTransSessCreated = false;
@@ -129,7 +135,7 @@ protected:
         "Some of output nodes wasn't found in the graph",
         "Number of channels in input doesn't equal to input tensor channel number",
         "This data type are not supported for SetInputDataCvMeth. Use SetInputDataTfMeth",
-        "Please, check that pointer you try to copy from is exist"
+        "Please, check that pointer you try to copy from is not NULL"
     };
 
 public:
@@ -182,7 +188,7 @@ public:
      * \param div делитель входного тензора
      * \param sub вычитаемое из входного тензора
      */
-    bool SetImgParams(const float & sub=0, const float & div=1);
+    bool SetImgParams(const std::vector<float> & sub={0,0,0}, const float & div=1, const bool& bgr=0);
 
     /*!
      * \brief Преобразовывает cv::Mat в тензор.
@@ -208,8 +214,6 @@ public:
      */
     bool SetInputDataCvMeth(cv::Mat& image);
 
-
-
     ///Запуск сессии, сохранение результата в Output экземляра класса
     bool Run(void);
 
@@ -221,6 +225,9 @@ public:
 
     ///Получение строки о текущем состоянии экземпляра класса
     const std::string GetDebugStr(void);
+
+    ///Получение параметров изображение в виде массива (высота, ширина, кол-во каналов)
+    std::vector<int> GetImgParams(void);
 };
 
 }

@@ -26,6 +26,7 @@ UTensorflowLib::UTensorflowLib(void)
 void UTensorflowLib::CreateClassSamples(RDK::UStorage *storage)
 {
  UploadClass<UTfClassifier>("TClassifier", "Classifier");
+ UploadClass<UTfDetector>("TDetector", "Detector");
 }
 // --------------------------
 

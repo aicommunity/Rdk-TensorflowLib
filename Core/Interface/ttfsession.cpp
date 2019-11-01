@@ -20,18 +20,38 @@ bool TTfSession::CheckInOutNodes()
 
     //Поиск входного звена
     tensorflow::NodeDef Node;
-    for(int i=0; i<GraphDef.node_size();i++)
+    if(UsePb)
     {
-        Node = GraphDef.node(i);
-        if(Node.name()==InputName)
+        for(int i=0; i<GraphDef.node_size();i++)
         {
-            break;
+            Node = GraphDef.node(i);
+            if(Node.name()==InputName)
+            {
+                break;
+            }
+            //Если узел не был найден
+            if(i==(GraphDef.node_size()-1))
+            {
+                ErCode = INPUT_NODE_DOESNT_EXIST_IN_GRAPH;
+                return false;
+            }
         }
-        //Если узел не был найден
-        if(i==(GraphDef.node_size()-1))
+    }
+    else
+    {
+        for(int i=0; i<MetaGraphDef.graph_def().node_size();i++)
         {
-            ErCode = INPUT_NODE_DOESNT_EXIST_IN_GRAPH;
-            return false;
+            Node = MetaGraphDef.graph_def().node(i);
+            if(Node.name()==InputName)
+            {
+                break;
+            }
+            //Если узел не был найден
+            if(i==(MetaGraphDef.graph_def().node_size()-1))
+            {
+                ErCode = INPUT_NODE_DOESNT_EXIST_IN_GRAPH;
+                return false;
+            }
         }
     }
     //Задание параметров входного тензора из параметров узла
@@ -43,17 +63,36 @@ bool TTfSession::CheckInOutNodes()
     //Проверка на существование выходного узла
     for(uint j=0; j < OutputName.size(); j++)
     {
-        for(int i=0; i<GraphDef.node_size();i++)
+        if(UsePb)
         {
-            Node = GraphDef.node(i);
-            if(Node.name()==OutputName[j])
+            for(int i=0; i<GraphDef.node_size();i++)
             {
-                break;
+                Node = GraphDef.node(i);
+                if(Node.name()==OutputName[j])
+                {
+                    break;
+                }
+                if(i==(GraphDef.node_size()-1))
+                {
+                    ErCode = OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH;
+                    return false;
+                }
             }
-            if(i==(GraphDef.node_size()-1))
+        }
+        else
+        {
+            for(int i=0; i<MetaGraphDef.graph_def().node_size();i++)
             {
-                ErCode = OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH;
-                return false;
+                Node = MetaGraphDef.graph_def().node(i);
+                if(Node.name()==OutputName[j])
+                {
+                    break;
+                }
+                if(i==(MetaGraphDef.graph_def().node_size()-1))
+                {
+                    ErCode = OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH;
+                    return false;
+                }
             }
         }
     }
@@ -91,6 +130,7 @@ TTfSession::~TTfSession(void)
 
 bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow)
 {
+    UsePb=true;
     if(!InitSession(gpu_fraction, allow_gpu_grow))
     {
         return false;
@@ -103,6 +143,8 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
+
+
 
     //Добавление графа в сессию
     Status = Session->Create(GraphDef);
@@ -124,6 +166,7 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
 
 bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &path_to_ckpt, const double &gpu_fraction, const bool& allow_gpu_grow)
 {
+    UsePb=false;
     if(!InitSession(gpu_fraction, allow_gpu_grow))
     {
         return false;
@@ -135,6 +178,18 @@ bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &p
     {
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
+    }
+
+    int k=0;
+    tensorflow::NodeDef Node;
+    for(int i=0; i<MetaGraphDef.graph_def().node_size();i++)
+    {
+        Node = MetaGraphDef.graph_def().node(i);
+        if(Node.device()=="/device:GPU:0")
+        {
+            k++;
+            Node.set_device("/device:CPU:0");
+        }
     }
 
     //Добавление графа в сессию
@@ -186,7 +241,8 @@ bool TTfSession::UnInit(void)
 
     ImgWidth=ImgHeight=-1;
     ImgChannels=0;
-    Divide=Substract=0;
+    Divide=1;
+    Substract={0,0,0};
 
     InputName.clear();
     OutputName.clear();
@@ -242,12 +298,13 @@ bool TTfSession::SetInputTensor(const tensorflow::Tensor &input_tensor)
        ErCode = EMPTY_INPUT_TENSOR;
        return false;
    }
-   Input = { {InputName, input_tensor}, };
+
+   Input = { {InputName, input_tensor},};
    ErCode=OK;
    return true;
 }
 
-bool TTfSession::SetImgParams(const float & sub, const float & div)
+bool TTfSession::SetImgParams(const std::vector<float> & sub, const float & div, const bool& bgr)
 {
     //Проверка на деление на ноль
     if(!int(div))
@@ -255,10 +312,12 @@ bool TTfSession::SetImgParams(const float & sub, const float & div)
         ErCode = DIVISION_BY_ZERO;
         return false;
     }
-    if(Divide!=div || Substract!=sub)
+
+    if(Divide!=div || Substract!=sub || ImgBgr!=bgr)
     {
         IsTransSessCreated=false;
     }
+    ImgBgr = bgr;
     Divide = div;
     Substract = sub;
     ErCode=OK;
@@ -271,10 +330,16 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
     RDK::UBitmap input;
     input.SetRes(image.GetWidth(), image.GetHeight(), image.GetColorModel());
     image.CopyTo(0,0,input);
-    if(image.GetColorModel() == RDK::ubmRGB24)
+
+    if(input.GetPixelByteLength()>1 && !ImgBgr)
     {
-        image.SwapRGBChannels(&input);
+         image.SwapRGBChannels(&input);
     }
+
+    //if(image.GetColorModel() == RDK::ubmRGB24)
+    //{
+    //    image.SwapRGBChannels(&input);
+    //}
 
     if(ImgChannels!=input.GetPixelByteLength())
     {
@@ -303,7 +368,15 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
         //Узел преобразования тип данных тензора
         auto caster = tensorflow::ops::Cast(root, resized, InputDataType);
         //Узел вычитания из тензора
-        auto substracted = tensorflow::ops::Sub(root, caster, tensorflow::ops::Cast(root,{Substract},InputDataType));
+        auto substracted = tensorflow::ops::Sub(root, caster,tensorflow::ops::Cast(root,{0},InputDataType));
+        if(ImgChannels>1)
+        {
+            substracted = tensorflow::ops::Sub(root, caster, tensorflow::ops::Cast(root,{Substract[0],Substract[1],Substract[2]},InputDataType));
+        }
+        else
+        {
+            substracted = tensorflow::ops::Sub(root, caster, tensorflow::ops::Cast(root,{Substract[0]},InputDataType));
+        }
         //Узел деления данных тензора
         tensorflow::ops::Div(root.WithOpName("out"), substracted, tensorflow::ops::Cast(root,{Divide},InputDataType));
         //Перевод Scope в формат GraphDef
@@ -383,8 +456,6 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
         return false;
     }
 
-
-
     //Был ли создан дополнительный граф для трансформации
     if(!IsTransSessCreated)
     {
@@ -399,7 +470,15 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
         //Узел преобразования тип данных тензора
         auto caster = tensorflow::ops::Cast(root, resized, InputDataType);
         //Узел вычитания из тензора
-        auto substracted = tensorflow::ops::Sub(root, caster, tensorflow::ops::Cast(root,{Substract},InputDataType));
+        auto substracted = tensorflow::ops::Sub(root, caster,{});
+        if(ImgChannels>1)
+        {
+            substracted = tensorflow::ops::Sub(root, caster, tensorflow::ops::Cast(root,{Substract[0],Substract[1],Substract[2]},InputDataType));
+        }
+        else
+        {
+            substracted = tensorflow::ops::Sub(root, caster, tensorflow::ops::Cast(root,{Substract[0]},InputDataType));
+        }
         //Узел деления данных тензора
         tensorflow::ops::Div(root.WithOpName("out"), substracted, tensorflow::ops::Cast(root,{Divide},InputDataType));
         //Перевод Scope в формат GraphDef
@@ -439,7 +518,7 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
     //Перевод из BGR в RGB
     cv::Mat input;
     image.copyTo(input);
-    if(input.channels()>1)
+    if(input.channels()>1 && !ImgBgr)
     {
         cv::cvtColor(image, input, CV_BGR2RGB);
     }
@@ -497,7 +576,7 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     cv::Mat input;
     image.copyTo(input);
     //Перевод из BGR в RGB
-    if(input.channels()>1)
+    if(input.channels()>1 && !ImgBgr)
     {
         cv::cvtColor(image, input, CV_BGR2RGB);
     }
@@ -519,13 +598,24 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
         return false;
     }
 
-    //Вычитание и деление
-    input = input - double(Substract);
+
+    if(ImgChannels>1)
+    {
+        cv::subtract(input,cv::Scalar(Substract[0],Substract[1],Substract[2]),input);
+
+    }
+    else
+    {
+        cv::subtract(input,cv::Scalar(Substract[0]),input);
+
+    }
+
     input = input / double(Divide);
 
     //Сохранение полученного изображения в тензор
     tensorflow::Tensor NewOne(InputDataType, tensorflow::TensorShape({1,input.rows,input.cols,input.channels()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
+
     memcpy(const_cast<char*>(tmp_data.data()), input.data, size_t(input.rows*input.cols*input.channels()*tensorflow::DataTypeSize(InputDataType)));
 
     //Установка входного тензора
@@ -573,6 +663,17 @@ const std::vector<tensorflow::Tensor>& TTfSession::GetOutput(void)
 const tensorflow::Tensor &TTfSession::GetInputTensor(void)
 {
     return Input[0].second;
+}
+
+///Получение параметров изображение в виде массива (высота, ширина, кол-во каналов)
+std::vector<int> TTfSession::GetImgParams(void)
+{
+    std::vector<int> Params;
+    Params.push_back(ImgHeight);
+    Params.push_back(ImgWidth);
+    Params.push_back(ImgChannels);
+
+    return Params;
 }
 
 const std::string TTfSession::GetDebugStr(void)

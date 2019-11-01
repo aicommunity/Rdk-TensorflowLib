@@ -14,14 +14,14 @@ namespace RDK {
 // Конструкторы и деструкторы
 // --------------------------
 UTfClassifier::UTfClassifier(void):
+    ConfidenceThreshold("ConfidenceThreshold", this),
+    NumClasses("NumClasses",this),
     InputImage("InputImage",this),
     InputImages("InputImages",this),
     OutputClasses("OutputClasses",this),
-    NumClasses("NumClasses",this),
-    ConfidenceThreshold("ConfidenceThreshold", this),
     OutputConfidences("OutputConfidences", this),
-    ClassificationTime("ClassificationTime",this),
-    DebugImage("DebugImage",this)
+    DebugImage("DebugImage",this),
+    ClassificationTime("ClassificationTime",this)
 {
 
 }
@@ -69,6 +69,16 @@ bool UTfClassifier::ATfReset(void)
     ClassificationTime=0.0;
     OutputClasses->Resize(0,1);
     OutputConfidences->Resize(0, NumClasses);
+    return true;
+}
+
+// Обеспечивает сборку внутренней структуры объекта
+// после настройки параметров
+// Автоматически вызывает метод Reset() и выставляет Ready в true
+// в случае успешной сборки
+bool UTfClassifier::ATfBuild()
+{
+    BuildDone=true;
     return true;
 }
 

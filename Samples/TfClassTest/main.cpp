@@ -14,17 +14,18 @@ using namespace TTF;
 
 int main(int argc, char *argv[])
 {
+
     QCoreApplication a(argc, argv);
 
-    cv::Mat img=cv::imread("/home/vladburin/1_Folder/CV_Study/img/grace_hopper.jpg",1);
+    cv::Mat img=cv::imread("/home/vladburin/1_Folder/TF/smth/trash/grace_hopper.jpg",1);
 
     TTfSession FirstExample;
 
-    StopIfBad(FirstExample.SetGraphParams({{"InceptionV3/Predictions/Reshape_1"},},"input"));
+    StopIfBad(FirstExample.SetGraphParams({{"InceptionV3/Predictions/Reshape_1"}},"input"));
 
-    StopIfBad(FirstExample.InitModel("/home/vladburin/1_Folder/TF/smth/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb",0.9,true))
+    StopIfBad(FirstExample.InitModel("/home/vladburin/1_Folder/TF/smth/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb",0.5,true))
 
-    StopIfBad(FirstExample.SetImgParams(0,255));
+    StopIfBad(FirstExample.SetImgParams({0,0,0},255));
 
     StopIfBad(FirstExample.SetInputDataTfMeth(img));
 
@@ -34,26 +35,15 @@ int main(int argc, char *argv[])
 
     std::string labels = "/home/vladburin/1_Folder/TF/smth/FrozenModels/inceptionv3_2016/imagenet_slim_labels.txt";
 
-    tensorflow::Status print_status = PrintTopLabels(Result1, labels);
 
-    img=cv::imread("/home/vladburin/1_Folder/CV_Study/img/grace_hopper.jpg",1);
 
-    StopIfBad(FirstExample.InitModel("/home/vladburin/1_Folder/TF/smth/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb",0.9,true))
+    PrintTopLabels(Result1, labels);
+    std::cout << "\n"<<std::endl;
 
-    StopIfBad(FirstExample.SetImgParams(0,255));
 
-    StopIfBad(FirstExample.SetInputDataTfMeth(img));
-
-    StopIfBad(FirstExample.Run());
-
-    Result1 = FirstExample.GetOutput();
-    std::cout << FirstExample.GetOutput()[0].dims() <<std::endl;
-    std::cout << FirstExample.GetOutput()[0].shape() <<std::endl;
-    std::cout << FirstExample.GetOutput()[0].dim_size(0) <<std::endl;
-    std::cout << FirstExample.GetOutput()[0].dim_size(1) <<std::endl;
-
-    print_status = PrintTopLabels(Result1, labels);
+    std::cout << FirstExample.GetOutput()[0].dim_size(1)<<std::endl;
 
 
     return a.exec();
+    //return 0;
 }
