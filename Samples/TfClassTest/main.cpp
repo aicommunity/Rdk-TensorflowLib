@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     for(int i=0;i<Images.size();i++)
     {
         cv::Mat img=cv::imread(Images[i],1);
-        StopIfBad(FirstExample.SetInputDataCvMeth(img));
+        StopIfBad(FirstExample.SetInputDataTfMeth(img));
         StopIfBad(FirstExample.Run());
         auto Result1 = FirstExample.GetOutput()[0];
         std::cout << i << std::endl;

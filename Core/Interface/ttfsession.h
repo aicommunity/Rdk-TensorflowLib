@@ -17,7 +17,7 @@
 //#include "tensorflow/cc/framework/gradients.h"
 //#include "tensorflow/core/kernels/training_ops.h"
 #include "tensorflow/core/protobuf/meta_graph.pb.h"
-
+#include "tensorflow/cc/ops/standard_ops.h"
 
 #include <opencv2/opencv.hpp>
 #include "opencv2/highgui/highgui.hpp"
@@ -151,7 +151,7 @@ public:
      * \param gpu_fraction доля использования памяти GPU
      * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
      */
-    bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0);
+    bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false);//, const int& device_number=0);
 
     /*!
      * \brief Инициализация сессии.
@@ -162,7 +162,7 @@ public:
      * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
      */
     bool InitModel(const std::string &path_to_meta, const std::string &path_to_ckpt,
-                   const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0);
+                   const double &gpu_fraction, const bool& allow_gpu_grow=false);//, const int& device_number=0);
 
     /*!
      * \brief Деинициализация сессии.

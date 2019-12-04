@@ -1,5 +1,5 @@
 #include "ttfsession.h"
-#include "tensorflow/cc/ops/standard_ops.h"
+
 namespace  TTF
 {
 
@@ -132,7 +132,7 @@ TTfSession::~TTfSession(void)
 
 }
 
-bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow, const int& device_number)
+bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow)//, const int& device_number)
 {
     UsePb=true;
     if(!InitSession(gpu_fraction, allow_gpu_grow))
@@ -178,7 +178,7 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
     return true;
 }
 
-bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &path_to_ckpt, const double &gpu_fraction, const bool& allow_gpu_grow, const int& device_number)
+bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &path_to_ckpt, const double &gpu_fraction, const bool& allow_gpu_grow)//, const int& device_number)
 {
     UsePb=false;
     if(!InitSession(gpu_fraction, allow_gpu_grow))
@@ -434,7 +434,7 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
         return false;
     }
 
-    //Копирование данных из cv::Mat в входной тензор
+    //Копирование данных в входной тензор
     memcpy(const_cast<char*>(tmp_data.data()), (input.GetData()), (unsigned long)(input.GetByteLength()));
 
     //Тензор со значениями нового размера изображения
