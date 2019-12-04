@@ -60,7 +60,7 @@ bool TTfSession::CheckInOutNodes()
     ImgWidth  =     int(Node.attr().at("shape").shape().dim(2).size());
     ImgChannels  =  int(Node.attr().at("shape").shape().dim(3).size());
 
-    //Проверка на существование выходного узла
+    //Проверка на существование выходных узлов
     for(uint j=0; j < OutputName.size(); j++)
     {
         if(UsePb)
@@ -108,6 +108,8 @@ bool TTfSession::InitSession(const double &gpu_fraction, const bool& allow_gpu_g
     opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(gpu_fraction);
     opts.config.mutable_gpu_options()->set_allow_growth(allow_gpu_grow);
 
+    //opts.config.mutable_gpu_options()->
+
     //Инициализация сессии
     Status = tensorflow::NewSession(opts, &Session);
     if(!Status.ok())
@@ -115,6 +117,8 @@ bool TTfSession::InitSession(const double &gpu_fraction, const bool& allow_gpu_g
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
+
+
     return true;
 }
 
@@ -128,7 +132,7 @@ TTfSession::~TTfSession(void)
 
 }
 
-bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow)
+bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow, const int& device_number)
 {
     UsePb=true;
     if(!InitSession(gpu_fraction, allow_gpu_grow))
@@ -154,6 +158,16 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
         return false;
     }
 
+    /*
+    std::string device = "/device:GPU:"+std::to_string(device_number);
+    for (int i = 0; i < GraphDef.node_size(); ++i)
+    {
+      auto node = GraphDef.mutable_node(i);
+      node->set_device(device);
+
+    }
+    */
+
     //Запуск метода проверки входного и выходных узлов
     if(!CheckInOutNodes())
     {
@@ -164,7 +178,7 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
     return true;
 }
 
-bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &path_to_ckpt, const double &gpu_fraction, const bool& allow_gpu_grow)
+bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &path_to_ckpt, const double &gpu_fraction, const bool& allow_gpu_grow, const int& device_number)
 {
     UsePb=false;
     if(!InitSession(gpu_fraction, allow_gpu_grow))
@@ -180,17 +194,6 @@ bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &p
         return false;
     }
 
-    int k=0;
-    tensorflow::NodeDef Node;
-    for(int i=0; i<MetaGraphDef.graph_def().node_size();i++)
-    {
-        Node = MetaGraphDef.graph_def().node(i);
-        if(Node.device()=="/device:GPU:0")
-        {
-            k++;
-            Node.set_device("/device:CPU:0");
-        }
-    }
 
     //Добавление графа в сессию
     Status = Session->Create(MetaGraphDef.graph_def());
@@ -199,6 +202,8 @@ bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &p
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
+
+
 
     //Чтение параметров (весов) в граф
     tensorflow::Tensor checkpointPathTensor(tensorflow::DataType::DT_STRING, tensorflow::TensorShape());
@@ -212,6 +217,15 @@ bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &p
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
+
+    /*
+    std::string device = "/device:GPU:"+std::to_string(device_number);
+    for (int i = 0; i < MetaGraphDef.graph_def().node_size(); ++i)
+    {
+      auto node = MetaGraphDef.graph_def().node(i);
+      node.set_device(device);
+    }
+    */
 
     //Запуск метода проверки входного и выходных узлов
     if(!CheckInOutNodes())
@@ -470,7 +484,7 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
         //Узел преобразования тип данных тензора
         auto caster = tensorflow::ops::Cast(root, resized, InputDataType);
         //Узел вычитания из тензора
-        auto substracted = tensorflow::ops::Sub(root, caster,{});
+        auto substracted = tensorflow::ops::Sub(root, caster,tensorflow::ops::Cast(root,{0},InputDataType));
         if(ImgChannels>1)
         {
             substracted = tensorflow::ops::Sub(root, caster, tensorflow::ops::Cast(root,{Substract[0],Substract[1],Substract[2]},InputDataType));
@@ -576,7 +590,7 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     cv::Mat input;
     image.copyTo(input);
     //Перевод из BGR в RGB
-    if(input.channels()>1 && !ImgBgr)
+    if(ImgChannels>1 && !ImgBgr)
     {
         cv::cvtColor(image, input, CV_BGR2RGB);
     }
@@ -609,9 +623,11 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
         cv::subtract(input,cv::Scalar(Substract[0]),input);
 
     }
-
+    //std::cout << input <<std::endl;
+    //sleep(5);
     input = input / double(Divide);
-
+    //std::cout << input <<std::endl;
+     //sleep(5);
     //Сохранение полученного изображения в тензор
     tensorflow::Tensor NewOne(InputDataType, tensorflow::TensorShape({1,input.rows,input.cols,input.channels()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();

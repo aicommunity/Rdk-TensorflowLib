@@ -49,6 +49,7 @@ HEADERS += \
     ../../Core/UTfComponent.h  \
     ../../Core/UTfClassifier.h  \
     ../../Core/UTfDetector.h  \
+    ../../Core/TAggrClassifierTF.h  \
 
 
 SOURCES += \
@@ -57,6 +58,7 @@ SOURCES += \
     ../../Core/UTfComponent.cpp \
     ../../Core/UTfClassifier.cpp \
     ../../Core/UTfDetector.cpp  \
+    ../../Core/TAggrClassifierTF.cpp  \
 
 
 #including opencv

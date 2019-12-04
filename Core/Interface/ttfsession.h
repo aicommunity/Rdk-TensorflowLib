@@ -97,7 +97,7 @@ protected:
     ///Кол-во каналов входного изображения (тензора)
     int ImgChannels=0;
 
-    ///В случае 3-ех канальнго изображения, отвечает за модель цвета (BGR-treu, RGB-false)
+    ///В случае 3-ех канальнго изображения, отвечает за модель цвета (BGR-true, RGB-false)
     bool ImgBgr=false;
 
     ///Флаг, указывающий была ли сделана сессия для трансформации
@@ -151,7 +151,7 @@ public:
      * \param gpu_fraction доля использования памяти GPU
      * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
      */
-    bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false);
+    bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0);
 
     /*!
      * \brief Инициализация сессии.
@@ -162,7 +162,7 @@ public:
      * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
      */
     bool InitModel(const std::string &path_to_meta, const std::string &path_to_ckpt,
-                   const double &gpu_fraction, const bool& allow_gpu_grow=false);
+                   const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0);
 
     /*!
      * \brief Деинициализация сессии.

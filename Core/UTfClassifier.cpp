@@ -88,6 +88,7 @@ bool UTfClassifier::ATfCalculate(void)
     ClassificationTime=0.0;
     clock_t start_frame = clock();
 
+
     if(InputImages.IsConnected() && InputImages->size()>0)
     {
         OutputClasses->Assign(InputImages->size(),1, CLASS_UNDEFINED);
@@ -134,7 +135,7 @@ bool UTfClassifier::ATfCalculate(void)
     }
 
     clock_t end_frame = clock();
-    ClassificationTime = ((double) (end_frame - start_frame)) / CLOCKS_PER_SEC;
+    ClassificationTime = (double) ((end_frame - start_frame) / CLOCKS_PER_SEC);
     return true;
 }
 // --------------------------
