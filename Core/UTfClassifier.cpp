@@ -143,7 +143,7 @@ bool UTfClassifier::ATfCalculate(void)
 bool UTfClassifier::ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confidences, double conf_thresh, int &class_id, bool &is_classified)
 {
     //Обрабатываем иображение для входа
-    if(!TfObject.SetInputDataTfMeth(*InputImage))
+    if(!TfObject.SetInputDataTfMeth(bmp))
     {
         DebugString=TfObject.GetDebugStr();
         return true;

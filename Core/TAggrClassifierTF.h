@@ -20,7 +20,7 @@ UPropertyInputData<MDMatrix<int>,TAggrClassifierTF> InputClassifierResults;
 UPropertyInputData<MDMatrix<double>, TAggrClassifierTF> InputConfidences;
 
 protected: // Данные
-///Количество классов для обнаружения, должно быть передано в TPyUBitmapClassifier, типа инкапсуляция
+
 int NumClasses;
 UTfClassifier UBitmapClassifier;
 

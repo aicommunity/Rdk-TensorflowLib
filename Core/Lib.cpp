@@ -25,8 +25,10 @@ UTensorflowLib::UTensorflowLib(void)
 // Не требуется предварительная очистка массива и уборка памяти.
 void UTensorflowLib::CreateClassSamples(RDK::UStorage *storage)
 {
- UploadClass<UTfClassifier>("TClassifier", "Classifier");
- UploadClass<UTfDetector>("TDetector", "Detector");
+ UploadClass<UTfClassifier>("UTfClassifier", "ClassifierTF");
+ UploadClass<UTfDetector>("UTfDetector", "DetectorTF");
+ UploadClass<TAggrClassifierTF>("TAggrClassifierTF","AggrClassifierTF");
+
 }
 // --------------------------
 

@@ -138,9 +138,9 @@ bool UTfComponent::ADefault(void)
 
     UseBGR=0;
 
-    GpuFraction=0.5;
+    GpuFraction=1.0;
 
-    GpuGrow=false;
+    GpuGrow=true;
 
     return ATfDefault();
 }
@@ -158,12 +158,12 @@ bool UTfComponent::ABuild(void)
         BuildDone=false;
         return true;
     }
-
+    std::string RealPath=GetEnvironment()->GetCurrentDataDir()+std::string(PbModelPath);
     //Загрузка модели нейросети
     if(UsePb)
     {
         //GetEnvironment()->GetCurrentDataDir()+
-        if(!TfObject.InitModel(PbModelPath,GpuFraction,GpuGrow))
+        if(!TfObject.InitModel(RealPath,GpuFraction,GpuGrow))
         {
             DebugString=TfObject.GetDebugStr();
             BuildDone=false;

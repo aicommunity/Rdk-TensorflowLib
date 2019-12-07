@@ -15,7 +15,7 @@ TAggrClassifierTF::TAggrClassifierTF(void):
     InputClassifierResults("InputClassifierResults",this),
     InputConfidences("InputConfidences",this)
 {
- AddStaticComponent("UBitmapClassifierTF", "UBitmapClassifierTF", &UBitmapClassifier);
+ AddStaticComponent("UTfClassifier", "ClassifierTF", &UBitmapClassifier);
 
 }
 
@@ -84,9 +84,10 @@ bool TAggrClassifierTF::ADefault2(void)
 bool TAggrClassifierTF::AReset2(void)
 {
     UBitmapClassifier.Reset();
-    bool res1 = CreateLink("", "ClassificationBitmaps",  "PyUBitmapClassifier", "InputImages");
-    bool res2 = CreateLink("PyUBitmapClassifier", "OutputClasses", "",  "InputClassifierResults");
-    bool res3 = CreateLink("PyUBitmapClassifier", "OutputConfidences", "",  "InputConfidences");
+
+    bool res1 = CreateLink("", "ClassificationBitmaps",  "ClassifierTF", "InputImages");
+    bool res2 = CreateLink("ClassifierTF", "OutputClasses", "",  "InputClassifierResults");
+    bool res3 = CreateLink("ClassifierTF", "OutputConfidences", "",  "InputConfidences");
 
     return true;
 }

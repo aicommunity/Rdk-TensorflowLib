@@ -33,14 +33,12 @@ DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 
 unix {
     DESTDIR = $$PWD/../../../../Bin/Platform/Linux/Lib.Qt
-    LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_cc
-    LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_framework
+    LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -ltensorflow_cc -ltensorflow_framework
 }
 
 windows {
     DESTDIR = $$PWD/../../../../Bin/Platform/Win/Lib.Qt
     LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -llibtensorflow_framework.dll -llibtensorflow.dll -llibtensorflow_cc.dll
-
 }
 
 HEADERS += \
