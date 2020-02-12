@@ -15,13 +15,14 @@ namespace RDK {
 // --------------------------
 UTfClassifier::UTfClassifier(void):
     ConfidenceThreshold("ConfidenceThreshold", this),
-    NumClasses("NumClasses",this),
+    SaveDebugResults("SaveDebugResults", this),
     InputImage("InputImage",this),
     InputImages("InputImages",this),
     OutputClasses("OutputClasses",this),
     OutputConfidences("OutputConfidences", this),
     DebugImage("DebugImage",this),
-    ClassificationTime("ClassificationTime",this)
+    ClassificationTime("ClassificationTime",this),
+    NumClasses("NumClasses",this)
 {
 
 }
@@ -59,7 +60,7 @@ UTfClassifier* UTfClassifier::New(void)
 // Восстановление настроек по умолчанию и сброс процесса счета
 bool UTfClassifier::ATfDefault(void)
 {
-    NumClasses=4;
+    NumClasses=0;
     return true;
 }
 
@@ -79,14 +80,14 @@ bool UTfClassifier::ATfReset(void)
 bool UTfClassifier::ATfBuild()
 {
     BuildDone=true;
+    NumClasses=TfObject.GetNumClasses();
     return true;
 }
 
 // Выполняет расчет этого объекта
 bool UTfClassifier::ATfCalculate(void)
 {
-    ClassificationTime=0.0;
-    clock_t start_frame = clock();
+
 
 
     if(InputImages.IsConnected() && InputImages->size()>0)
@@ -134,18 +135,24 @@ bool UTfClassifier::ATfCalculate(void)
         }
     }
 
-    clock_t end_frame = clock();
-    ClassificationTime = (double) ((end_frame - start_frame) / CLOCKS_PER_SEC);
+
+
     return true;
 }
 // --------------------------
 
 bool UTfClassifier::ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confidences, double conf_thresh, int &class_id, bool &is_classified)
 {
+
+    ClassificationTime=0.0;
+    clock_t start_frame = clock();
+    //auto begin = std::chrono::steady_clock::now();
+
     //Обрабатываем иображение для входа
-    if(!TfObject.SetInputDataTfMeth(bmp))
+    if(!TfObject.SetInputDataCvMeth(bmp))
     {
         DebugString=TfObject.GetDebugStr();
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
 
@@ -153,6 +160,7 @@ bool UTfClassifier::ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confid
     if(!TfObject.Run())
     {
         DebugString=TfObject.GetDebugStr();
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
 
@@ -194,6 +202,54 @@ bool UTfClassifier::ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confid
     }
 
     class_id = max_id;
+    clock_t end_frame = clock();
+    ClassificationTime = (double)(end_frame - start_frame) / CLOCKS_PER_SEC;
+    /*
+    auto end = std::chrono::steady_clock::now();
+
+    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
+
+    double(elapsed_ms.count())/1000;
+
+    clock_t end_frame = clock();
+    ClassificationTime =double(elapsed_ms.count())/1000;
+    ClassificationTime = (double)(end_frame - start_frame) / CLOCKS_PER_SEC;
+
+    std::string img_path = Environment->GetCurrentDataDir()+"classification_time_Cv_rdk";
+    std::ofstream CheckTime;
+    CheckTime.open(img_path, std::ios::app);
+    CheckTime << ClassificationTime << "\n";
+    CheckTime.close();
+    */
+
+
+    if(SaveDebugResults)
+    {
+        static int iiii=0;
+        std::string img_path = Environment->GetCurrentDataDir()+"classification_results";
+        if(RDK::CreateNewDirectory(img_path.c_str())==0)
+        {
+            std::stringstream save_path;
+            save_path<<img_path<<"/"<<class_id;
+            if(RDK::CreateNewDirectory(save_path.str().c_str())==0)
+            {
+                RDK::UBitmap TempBitmap;
+                bmp.ConvertTo(TempBitmap);
+                TempBitmap.SwapRGBChannels();
+                //TempBitmap.ReflectionX();
+
+                jpge::params param;
+                param.m_quality=100;
+
+                save_path<<"/"<<iiii<<"_"<<class_id<<"_"<<max_conf<<".jpg";
+                //   jpge::jpeg_encoder jpeg_e;
+                jpge::compress_image_to_jpeg_file(save_path.str().c_str(), TempBitmap.GetWidth(), TempBitmap.GetHeight(), 3,
+                                               TempBitmap.GetData(),param);
+
+            }
+        iiii++;
+        }
+    }
 
     return true;
 }

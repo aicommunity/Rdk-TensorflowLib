@@ -11,10 +11,7 @@ namespace RDK {
 // Конструкторы и деструкторы
 // --------------------------
 UTfComponent::UTfComponent(void)
-    : UsePb("UsePb", this, &UTfComponent::SetUsePb),
-      PbModelPath("PbModelPath",this, &UTfComponent::SetPbModelPath),
-      MetaModelPath("MetaModelPath",this, &UTfComponent::SetMetaModelPath),
-      CkptPath("CkptPath",this,&UTfComponent::SetCkptPath),
+    : PbModelPath("PbModelPath",this, &UTfComponent::SetPbModelPath),
       InputNodeName("InputNodeName",this,&UTfComponent::SetInputNodeName),
       OutputNodeName("OutputNodeName",this,&UTfComponent::SetOutputNodeName),
       ImgDiv("ImgDiv",this,&UTfComponent::SetImgDiv),
@@ -40,23 +37,6 @@ UTfComponent::~UTfComponent(void)
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-bool UTfComponent::SetUsePb(const bool &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfComponent::SetMetaModelPath(const std::string &value)
-{
-    Ready=false;
-    return true;
-}
-
-bool UTfComponent::SetCkptPath(const std::string &value)
-{
-    Ready=false;
-    return true;
-}
 
 bool UTfComponent::SetPbModelPath(const std::string &value)
 {
@@ -120,12 +100,6 @@ bool UTfComponent::SetGpuGrow(const bool &value)
 // Восстановление настроек по умолчанию и сброс процесса счета
 bool UTfComponent::ADefault(void)
 {
-    UsePb=true;
-
-    MetaModelPath="";
-
-    CkptPath="";
-
     PbModelPath="";
 
     InputNodeName="";
@@ -138,7 +112,7 @@ bool UTfComponent::ADefault(void)
 
     UseBGR=0;
 
-    GpuFraction=1.0;
+    GpuFraction=0.8;
 
     GpuGrow=true;
 
@@ -151,33 +125,36 @@ bool UTfComponent::ADefault(void)
 // в случае успешной сборки
 bool UTfComponent::ABuild(void)
 {
+    /*
+    if(BuildDone)
+    {
+        if(!TfObject.UnInit())
+        {
+            DebugString=TfObject.GetDebugStr();
+            BuildDone=false;
+            return true;
+        }
+    }
+    */
+
+
     //Задание параметров модели нейросети
     if(!TfObject.SetGraphParams(OutputNodeName,InputNodeName))
     {
         DebugString=TfObject.GetDebugStr();
         BuildDone=false;
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
     std::string RealPath=GetEnvironment()->GetCurrentDataDir()+std::string(PbModelPath);
     //Загрузка модели нейросети
-    if(UsePb)
+    //GetEnvironment()->GetCurrentDataDir()+
+    if(!TfObject.InitModel(RealPath,GpuFraction,GpuGrow))
     {
-        //GetEnvironment()->GetCurrentDataDir()+
-        if(!TfObject.InitModel(RealPath,GpuFraction,GpuGrow))
-        {
-            DebugString=TfObject.GetDebugStr();
-            BuildDone=false;
-            return true;
-        }
-    }
-    else
-    {
-        if(!TfObject.InitModel(MetaModelPath,CkptPath,GpuFraction,GpuGrow))
-        {
-            DebugString=TfObject.GetDebugStr();
-            BuildDone=false;
-            return true;
-        }
+        DebugString=TfObject.GetDebugStr();
+        BuildDone=false;
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        return true;
     }
 
     //Установка параметров нормализации
@@ -185,6 +162,7 @@ bool UTfComponent::ABuild(void)
     {
         DebugString=TfObject.GetDebugStr();
         BuildDone=false;
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
 
@@ -213,6 +191,7 @@ bool UTfComponent::ACalculate(void)
    if(!BuildDone)
    {
        DebugString=TfObject.GetDebugStr();
+       LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
        return true;
    }
 

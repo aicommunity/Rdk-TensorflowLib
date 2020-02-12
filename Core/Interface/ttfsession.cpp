@@ -20,40 +20,22 @@ bool TTfSession::CheckInOutNodes()
 
     //Поиск входного звена
     tensorflow::NodeDef Node;
-    if(UsePb)
+
+    for(int i=0; i<GraphDef.node_size();i++)
     {
-        for(int i=0; i<GraphDef.node_size();i++)
+        Node = GraphDef.node(i);
+        if(Node.name()==InputName)
         {
-            Node = GraphDef.node(i);
-            if(Node.name()==InputName)
-            {
-                break;
-            }
-            //Если узел не был найден
-            if(i==(GraphDef.node_size()-1))
-            {
-                ErCode = INPUT_NODE_DOESNT_EXIST_IN_GRAPH;
-                return false;
-            }
+            break;
+        }
+        //Если узел не был найден
+        if(i==(GraphDef.node_size()-1))
+        {
+            ErCode = INPUT_NODE_DOESNT_EXIST_IN_GRAPH;
+            return false;
         }
     }
-    else
-    {
-        for(int i=0; i<MetaGraphDef.graph_def().node_size();i++)
-        {
-            Node = MetaGraphDef.graph_def().node(i);
-            if(Node.name()==InputName)
-            {
-                break;
-            }
-            //Если узел не был найден
-            if(i==(MetaGraphDef.graph_def().node_size()-1))
-            {
-                ErCode = INPUT_NODE_DOESNT_EXIST_IN_GRAPH;
-                return false;
-            }
-        }
-    }
+
     //Задание параметров входного тензора из параметров узла
     InputDataType = Node.attr().at("dtype").type();
     ImgHeight =     int(Node.attr().at("shape").shape().dim(1).size());
@@ -63,36 +45,17 @@ bool TTfSession::CheckInOutNodes()
     //Проверка на существование выходных узлов
     for(uint j=0; j < OutputName.size(); j++)
     {
-        if(UsePb)
+        for(int i=0; i<GraphDef.node_size();i++)
         {
-            for(int i=0; i<GraphDef.node_size();i++)
+            Node = GraphDef.node(i);
+            if(Node.name()==OutputName[j])
             {
-                Node = GraphDef.node(i);
-                if(Node.name()==OutputName[j])
-                {
-                    break;
-                }
-                if(i==(GraphDef.node_size()-1))
-                {
-                    ErCode = OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH;
-                    return false;
-                }
+                break;
             }
-        }
-        else
-        {
-            for(int i=0; i<MetaGraphDef.graph_def().node_size();i++)
+            if(i==(GraphDef.node_size()-1))
             {
-                Node = MetaGraphDef.graph_def().node(i);
-                if(Node.name()==OutputName[j])
-                {
-                    break;
-                }
-                if(i==(MetaGraphDef.graph_def().node_size()-1))
-                {
-                    ErCode = OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH;
-                    return false;
-                }
+                ErCode = OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH;
+                return false;
             }
         }
     }
@@ -103,12 +66,13 @@ bool TTfSession::CheckInOutNodes()
 
 bool TTfSession::InitSession(const double &gpu_fraction, const bool& allow_gpu_grow)
 {
+    GpuGrow=allow_gpu_grow;
+    GpuFraction=gpu_fraction;
     //Определение параметров сессии
     tensorflow::SessionOptions opts;
     opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(gpu_fraction);
     opts.config.mutable_gpu_options()->set_allow_growth(allow_gpu_grow);
 
-    //opts.config.mutable_gpu_options()->
 
     //Инициализация сессии
     Status = tensorflow::NewSession(opts, &Session);
@@ -117,7 +81,6 @@ bool TTfSession::InitSession(const double &gpu_fraction, const bool& allow_gpu_g
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
-
 
     return true;
 }
@@ -134,7 +97,6 @@ TTfSession::~TTfSession(void)
 
 bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow, const int& device_number)
 {
-    UsePb=true;
     if(!InitSession(gpu_fraction, allow_gpu_grow))
     {
         return false;
@@ -157,7 +119,7 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
-
+    //TODO Номер GPU
     /*
     std::string device = "/device:GPU:"+std::to_string(device_number);
     for (int i = 0; i < GraphDef.node_size(); ++i)
@@ -174,64 +136,13 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
         return false;
     }
 
-    ErCode=OK;
-    return true;
-}
+    //Первый запуск сети медленный
+    cv::Mat warmUp(ImgHeight, ImgWidth, CV_MAKETYPE(CV_32F,ImgChannels), cv::Scalar(0,0,0));
+    SetInputDataCvMeth(warmUp);
 
-bool TTfSession::InitModel(const std::string &path_to_meta, const std::string &path_to_ckpt, const double &gpu_fraction, const bool& allow_gpu_grow, const int& device_number)
-{
-    UsePb=false;
-    if(!InitSession(gpu_fraction, allow_gpu_grow))
-    {
-        return false;
-    }
+    Run();
 
-    //Загрузка графа из meta файла в MetaGraphDef
-    Status = ReadBinaryProto(tensorflow::Env::Default(), path_to_meta, &MetaGraphDef);
-    if(!Status.ok())
-    {
-        ErCode = TfErrorCode::BAD_STATUS;
-        return false;
-    }
-
-
-    //Добавление графа в сессию
-    Status = Session->Create(MetaGraphDef.graph_def());
-    if(!Status.ok())
-    {
-        ErCode = TfErrorCode::BAD_STATUS;
-        return false;
-    }
-
-
-
-    //Чтение параметров (весов) в граф
-    tensorflow::Tensor checkpointPathTensor(tensorflow::DataType::DT_STRING, tensorflow::TensorShape());
-
-    checkpointPathTensor.scalar<std::string>()() = path_to_ckpt;
-    //Чтение весов модели из файла checkpoint'а
-    Status = Session->Run({{MetaGraphDef.saver_def().filename_tensor_name(), checkpointPathTensor },},
-                          {},{MetaGraphDef.saver_def().restore_op_name()},nullptr);
-    if(!Status.ok())
-    {
-        ErCode = TfErrorCode::BAD_STATUS;
-        return false;
-    }
-
-    /*
-    std::string device = "/device:GPU:"+std::to_string(device_number);
-    for (int i = 0; i < MetaGraphDef.graph_def().node_size(); ++i)
-    {
-      auto node = MetaGraphDef.graph_def().node(i);
-      node.set_device(device);
-    }
-    */
-
-    //Запуск метода проверки входного и выходных узлов
-    if(!CheckInOutNodes())
-    {
-        return false;
-    }
+    NumberOfClasses=this->GetOutput()[0].dim_size(1);
 
     ErCode=OK;
     return true;
@@ -245,12 +156,18 @@ bool TTfSession::UnInit(void)
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
+    GraphDef.Clear();
 
-    Status = SessionForTransform->Close();
-    if(!Status.ok())
+    if(IsTransSessCreated)
     {
-        ErCode = TfErrorCode::BAD_STATUS;
-        return false;
+        Status = SessionForTransform->Close();
+        if(!Status.ok())
+        {
+            ErCode = TfErrorCode::BAD_STATUS;
+            return false;
+        }
+        GraphForTransform.Clear();
+
     }
 
     ImgWidth=ImgHeight=-1;
@@ -261,10 +178,6 @@ bool TTfSession::UnInit(void)
     InputName.clear();
     OutputName.clear();
 
-    GraphDef.Clear();
-    GraphForTransform.Clear();
-    MetaGraphDef.Clear();
-
     IsTransSessCreated = false;
 
     Output.clear();
@@ -272,7 +185,7 @@ bool TTfSession::UnInit(void)
     Input.clear();
 
     Status=(Status.OK());
-    ErCode=OK;
+    //ErCode=OK;
     return true;
 }
 
@@ -334,26 +247,19 @@ bool TTfSession::SetImgParams(const std::vector<float> & sub, const float & div,
     ImgBgr = bgr;
     Divide = div;
     Substract = sub;
+
     ErCode=OK;
     return true;
 }
 
 bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
 {
+
+
     //Преобразование UbitMap изображения в формат RGB
     RDK::UBitmap input;
     input.SetRes(image.GetWidth(), image.GetHeight(), image.GetColorModel());
     image.CopyTo(0,0,input);
-
-    if(input.GetPixelByteLength()>1 && !ImgBgr)
-    {
-         image.SwapRGBChannels(&input);
-    }
-
-    //if(image.GetColorModel() == RDK::ubmRGB24)
-    //{
-    //    image.SwapRGBChannels(&input);
-    //}
 
     if(ImgChannels!=input.GetPixelByteLength())
     {
@@ -368,6 +274,20 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
         return false;
     }
 
+
+
+    if(ImgChannels>1 && !ImgBgr)
+    {
+         image.SwapRGBChannels(&input);
+    }
+
+    //if(image.GetColorModel() == RDK::ubmRGB24)
+    //{
+    //    image.SwapRGBChannels(&input);
+    //}
+
+
+
     //Был ли создан дополнительный граф для трансформации
     if(!IsTransSessCreated)
     {
@@ -378,7 +298,8 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
         //Сюда будет задаваться тензор с новым размером изображения
         auto Size = tensorflow::ops::Placeholder(root.WithOpName("NewSize"), tensorflow::DataType::DT_INT32);
         //Узел изменения размера
-        auto resized = tensorflow::ops::ResizeBilinear(root, a, Size);
+        auto resized = tensorflow::ops::ResizeBicubic(root, a, Size);
+        //auto resized = tensorflow::ops::ResizeBilinear(root, a, Size);
         //Узел преобразования тип данных тензора
         auto caster = tensorflow::ops::Cast(root, resized, InputDataType);
         //Узел вычитания из тензора
@@ -401,7 +322,11 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
             return false;
         }
         //Инициализация сессии преобразования
-        Status = tensorflow::NewSession(tensorflow::SessionOptions(), &SessionForTransform);
+        tensorflow::SessionOptions opts;
+        opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(GpuFraction);
+        opts.config.mutable_gpu_options()->set_allow_growth(GpuGrow);
+
+        Status = tensorflow::NewSession(opts, &SessionForTransform);
         if(!Status.ok())
         {
             ErCode = TfErrorCode::BAD_STATUS;
@@ -417,7 +342,7 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
         IsTransSessCreated=true;
     }
 
-    //Если размер не задан строго, берется размер входного изображения cv::Mat
+    //Если размер не задан строго, берется размер входного изображения
     if(ImgHeight==-1 && ImgWidth==-1)
     {
         ImgHeight=input.GetHeight();
@@ -427,7 +352,6 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
     tensorflow::Tensor NewOne(tensorflow::DataType::DT_UINT8, tensorflow::TensorShape({1,input.GetHeight(),input.GetWidth(),input.GetPixelByteLength()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
     //Перевод из BGR в RGB
-    //cv::cvtColor(image, image, CV_BGR2RGB);
     if(input.GetData()==nullptr)
     {
         ErCode = TfErrorCode::COPY_DATA_FROM_NULL_PTR;
@@ -463,6 +387,8 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
 
 bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 {
+
+
     //Проверка на определение входных параметров
     if((Divide)==0.0f)
     {
@@ -503,7 +429,13 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
             return false;
         }
         //Инициализация сессии преобразования
-        Status = tensorflow::NewSession(tensorflow::SessionOptions(), &SessionForTransform);
+
+        tensorflow::SessionOptions opts;
+        opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(GpuFraction);
+        opts.config.mutable_gpu_options()->set_allow_growth(GpuGrow);
+
+        Status = tensorflow::NewSession(opts, &SessionForTransform);
+
         if(!Status.ok())
         {
             ErCode = TfErrorCode::BAD_STATUS;
@@ -562,11 +494,16 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
     OutputForTransform.clear();
 
     ErCode=OK;
+
+
     return true;
+
+
 }
 
 bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
 {
+
     //Проверка на определение входных параметров
     if((Divide)==0.0)
     {
@@ -638,9 +575,27 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     if(!SetInputTensor(NewOne))
     {
         return false;
-    };
+    }
+
 
     ErCode=OK;
+
+
+    return true;
+}
+
+bool TTfSession::SetInputDataCvMeth(RDK::UBitmap& image)
+{
+    cv::Mat imageMat=cv::Mat(image.GetHeight(), image.GetWidth(), CV_8UC3, image.GetData()).clone();
+
+    if(!SetInputDataCvMeth(imageMat))
+    {
+        return false;
+    }
+
+    ErCode=OK;
+
+
     return true;
 }
 
@@ -700,6 +655,11 @@ const std::string TTfSession::GetDebugStr(void)
     }
 
     return DebugStr[ErCode];
+}
+
+int TTfSession::GetNumClasses()
+{
+    return NumberOfClasses;
 }
 
 }

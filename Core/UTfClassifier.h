@@ -13,8 +13,9 @@ protected: // Параметры
 ///TODO: Это пихать ДО OneHot'а. И проверить, чтобы класс выдавало в виде '-1', а уверенности все 0
 ULProperty<double,UTfClassifier, ptPubParameter> ConfidenceThreshold;
 
-/// Количество классов объектов (какой размер будет у вектора)
-ULProperty<int,UTfClassifier, ptPubParameter> NumClasses;
+/// Сохранять в отладочную папку <config_path>/classification_result/номер класса
+/// по получившимся классам результаты классификации (для анализа/отладки)
+ULProperty<bool, UTfClassifier> SaveDebugResults;
 
 protected: // Входы и выходы
 
@@ -37,6 +38,9 @@ UPropertyOutputData<UBitmap,UTfClassifier, ptPubOutput> DebugImage;
 protected: // Переменные состояния
 /// Время, затраченное на классификацию, секунды
 ULProperty<double,UTfClassifier, ptPubState> ClassificationTime;
+
+/// Количество классов объектов (какой размер будет у вектора)
+ULProperty<int,UTfClassifier, ptPubState> NumClasses;
 
 public: // Методы
 // --------------------------

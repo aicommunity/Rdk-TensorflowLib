@@ -24,6 +24,9 @@
 
 #include "../../../../Rdk/Deploy/Include/rdk.h"
 
+
+
+
 namespace TTF
 {
 
@@ -64,14 +67,8 @@ protected:
     ///Статус
     tensorflow::Status Status=Status.OK();
 
-    ///Какая модель используется
-    bool UsePb;
-
     ///Класс, где хранится сам граф
     tensorflow::GraphDef GraphDef;
-
-    ///Класс, где хранится мета граф
-    tensorflow::MetaGraphDef MetaGraphDef;
 
     ///Названия выходных узлов
     std::vector<std::string> OutputName;
@@ -100,6 +97,13 @@ protected:
     ///В случае 3-ех канальнго изображения, отвечает за модель цвета (BGR-true, RGB-false)
     bool ImgBgr=false;
 
+    ///Кол-во классов в случае классификатора
+    int NumberOfClasses=0;
+
+    ///GPU
+    bool GpuGrow=false;
+
+    double GpuFraction=0.5;
     ///Флаг, указывающий была ли сделана сессия для трансформации
     bool IsTransSessCreated = false;
 
@@ -128,7 +132,7 @@ protected:
         "Everything OK",
         "",
         "Set input node name with SetGraphParams",
-        "Node wasn't found in the Graph",
+        "Input node wasn't found in the Graph",
         "Empty input tensor. Set it with SetInputData",
         "Division by zero. Set image parameters with SetImgParams",
         "Set output node name with SetGraphParams",
@@ -152,17 +156,6 @@ public:
      * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
      */
     bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0);
-
-    /*!
-     * \brief Инициализация сессии.
-     * \brief Загрузка модели из чекпоинта в сесиию
-     * \param path_to_meta путь к meta файлу графа (там хранится модель графа)
-     * \param path_to_ckpt путь к файлам ckpt формата (там хранятся значения переменных)
-     * \param gpu_fraction доля использования памяти GPU
-     * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
-     */
-    bool InitModel(const std::string &path_to_meta, const std::string &path_to_ckpt,
-                   const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0);
 
     /*!
      * \brief Деинициализация сессии.
@@ -199,10 +192,10 @@ public:
     bool SetInputDataTfMeth(cv::Mat& image);
 
     /*!
-     * \brief Преобразовывает сырые данные изобрежения в тензор.
+     * \brief Преобразовывает RDK::UBitmap в тензор.
      * Используются методы TF.
      * Полученный тензор записывается в InputTensor экземпляра класса.
-     * \param image входное изображение в формате cv::Mat
+     * \param image входное изображение в формате RDK::UBitmap&
      */
     bool SetInputDataTfMeth(RDK::UBitmap& image);
 
@@ -213,6 +206,14 @@ public:
      * \param image входное изображение в формате cv::Mat
      */
     bool SetInputDataCvMeth(cv::Mat& image);
+
+    /*!
+     * \brief Преобразовывает RDK::UBitmap в тензор.
+     *  Используются методы OpenCV.
+     *  Полученный тензор записывается в InputTensor экземпляра класса.
+     * \param image входное изображение в формате RDK::UBitmap
+     */
+    bool SetInputDataCvMeth(RDK::UBitmap& image);
 
     ///Запуск сессии, сохранение результата в Output экземляра класса
     bool Run(void);
@@ -228,6 +229,9 @@ public:
 
     ///Получение параметров изображение в виде массива (высота, ширина, кол-во каналов)
     std::vector<int> GetImgParams(void);
+
+    ///Получение кол-ва классов классификатора
+    int GetNumClasses();
 };
 
 }

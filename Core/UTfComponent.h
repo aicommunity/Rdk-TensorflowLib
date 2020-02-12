@@ -9,16 +9,9 @@ class UTfComponent:public RDK::UNet
 {
 
 protected: // Параметры
-///Флаг отвечающий за тип загружаемой модели (true - pb модель, false - meta+ckpt модель)
-ULProperty<bool,UTfComponent, ptPubParameter> UsePb;
 
 ///Путь к модели нейронной сети (pb модель)
 ULProperty<std::string,UTfComponent, ptPubParameter> PbModelPath;
-
-///Пути к модели нейронной сети (meta+ckpt модель)
-ULProperty<std::string,UTfComponent, ptPubParameter> MetaModelPath;
-
-ULProperty<std::string,UTfComponent, ptPubParameter> CkptPath;
 
 ///Имя входного узла нейронной сети
 ULProperty<std::string,UTfComponent, ptPubParameter> InputNodeName;
@@ -72,12 +65,6 @@ virtual ~UTfComponent(void);
 // ---------------------
 // ---------------------
 
-
-bool SetUsePb(const bool &value);
-
-bool SetMetaModelPath(const std::string &value);
-
-bool SetCkptPath(const std::string &value);
 
 bool SetPbModelPath(const std::string &value);
 

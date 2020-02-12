@@ -154,6 +154,7 @@ bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<
     if(!TfObject.SetInputDataTfMeth(*InputImage))
     {
         DebugString=TfObject.GetDebugStr();
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
 
@@ -161,6 +162,7 @@ bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<
     if(!TfObject.Run())
     {
         DebugString=TfObject.GetDebugStr();
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
     int num_detections;
