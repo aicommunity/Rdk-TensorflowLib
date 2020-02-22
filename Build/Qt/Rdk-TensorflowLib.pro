@@ -44,6 +44,7 @@ windows {
 HEADERS += \
     ../../Core/Lib.h \
     ../../Core/Interface/ttfsession.h \
+    ../../Core/Interface/ttfsessionSqDet.h \
     ../../Core/UTfComponent.h  \
     ../../Core/UTfClassifier.h  \
     ../../Core/UTfDetector.h  \
@@ -53,6 +54,7 @@ HEADERS += \
 SOURCES += \
     ../../Core/Lib.cpp \
     ../../Core/Interface/ttfsession.cpp \
+    ../../Core/Interface/ttfsessionSqDet.cpp \
     ../../Core/UTfComponent.cpp \
     ../../Core/UTfClassifier.cpp \
     ../../Core/UTfDetector.cpp  \
