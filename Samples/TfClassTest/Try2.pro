@@ -16,6 +16,7 @@ DEFINES += NOMINMAX
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        ../../Core/Interface/ttfsessionSqDet.cpp \
         main.cpp \
         ../../Core/Interface/ttfsession.cpp
 
@@ -45,7 +46,8 @@ DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 
 HEADERS += \
     ../../Core/Interface/ttfsession.h \
-    ../../Core/Interface/label_image.h
+    ../../Core/Interface/label_image.h \
+    ../../Core/Interface/ttfsessionSqDet.h
 
 #including opencv
 OPENCV_LIBS_LIST = -lopencv_core \

@@ -1,5 +1,5 @@
 #include "ttfsession.h"
-#include "tensorflow/cc/ops/standard_ops.h"
+
 namespace  TTF
 {
 
@@ -137,16 +137,36 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
     }
 
     //Первый запуск сети медленный
+    //Для того разогрев
     cv::Mat warmUp(ImgHeight, ImgWidth, CV_MAKETYPE(CV_32F,ImgChannels), cv::Scalar(0,0,0));
-    SetInputDataCvMeth(warmUp);
+    tensorflow::Tensor NewOne(InputDataType, tensorflow::TensorShape({1,warmUp.rows,warmUp.cols,warmUp.channels()}));
+    tensorflow::StringPiece tmp_data = NewOne.tensor_data();
 
-    Run();
+    memcpy(const_cast<char*>(tmp_data.data()), warmUp.data, size_t(warmUp.rows*warmUp.cols*warmUp.channels()*tensorflow::DataTypeSize(InputDataType)));
 
-    NumberOfClasses=this->GetOutput()[0].dim_size(1);
+    //Установка входного тензора
+    if(!SetInputTensor(NewOne))
+    {
+        return false;
+    }
+    /*
+    if(!SetInputDataCvMeth(warmUp))
+        return false;
+    */
 
+    if(!Run())
+        return false;
+    /*
+    //Мб не надо
+    if(!(this->GetOutput().empty()) && this->GetOutput()[0].dims()>2)
+    {
+        NumberOfClasses=this->GetOutput()[0].dim_size(1);
+    }
+    */
     ErCode=OK;
     return true;
 }
+
 
 bool TTfSession::UnInit(void)
 {
@@ -252,6 +272,7 @@ bool TTfSession::SetImgParams(const std::vector<float> & sub, const float & div,
     return true;
 }
 
+/*
 bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
 {
 
@@ -385,6 +406,22 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
     return true;
 }
 
+bool TTfSession::SetInputDataCvMeth(RDK::UBitmap& image)
+{
+    cv::Mat imageMat=cv::Mat(image.GetHeight(), image.GetWidth(), CV_8UC3, image.GetData()).clone();
+
+    if(!SetInputDataCvMeth(imageMat))
+    {
+        return false;
+    }
+
+    ErCode=OK;
+
+
+    return true;
+}
+*/
+
 bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 {
 
@@ -501,6 +538,9 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 
 }
 
+
+
+
 bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
 {
 
@@ -531,8 +571,6 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     {
         cv::cvtColor(image, input, CV_BGR2RGB);
     }
-    //Изменение размера
-    cv::resize(input,input,cv::Size(ImgWidth,ImgHeight));
 
     //Изменение типа. Не все типы поддерживаются
     if(InputDataType==tensorflow::DataType::DT_FLOAT)
@@ -547,8 +585,7 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     {
         ErCode=TYPE_UNSOPPORTED_FOR_CV_METH;
         return false;
-    }
-
+    }   
 
     if(ImgChannels>1)
     {
@@ -560,9 +597,14 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
         cv::subtract(input,cv::Scalar(Substract[0]),input);
 
     }
+
     //std::cout << input <<std::endl;
     //sleep(5);
     input = input / double(Divide);
+
+    //Изменение размера
+    cv::resize(input,input,cv::Size(ImgWidth,ImgHeight));
+
     //std::cout << input <<std::endl;
      //sleep(5);
     //Сохранение полученного изображения в тензор
@@ -577,21 +619,6 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
         return false;
     }
 
-
-    ErCode=OK;
-
-
-    return true;
-}
-
-bool TTfSession::SetInputDataCvMeth(RDK::UBitmap& image)
-{
-    cv::Mat imageMat=cv::Mat(image.GetHeight(), image.GetWidth(), CV_8UC3, image.GetData()).clone();
-
-    if(!SetInputDataCvMeth(imageMat))
-    {
-        return false;
-    }
 
     ErCode=OK;
 

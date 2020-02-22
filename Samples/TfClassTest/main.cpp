@@ -6,7 +6,7 @@
 //#include <sys/time.h>
 #include "../../Core/Interface/ttfsession.h"
 #include "../../Core/Interface/label_image.h"
-
+#include "../../Core/Interface/ttfsessionSqDet.h"
 
 using namespace TTF;
 
@@ -14,72 +14,39 @@ using namespace TTF;
 { std::cout << FirstExample.GetDebugStr() << std::endl; \
   return 0;}
 \
-int CheckAccuracy();
+
+
+int CheckAccuracy(std::string input_model,std::vector<std::string> outputs,std::string inputs);
 
 int SimpleInception();
 
 int DetectFrames(QString str, std::string path, std::string savefolder);
 
+int DebugSqueezeDet(std::string img_path);
+
+
+
+
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-/*
-    std::vector<std::string> Images;
-    QDir dir("/home/vladburin/1_Folder/TF/smth/trash/CheckSlassifier/eleron_val/cars");
-    dir.setFilter(QDir::Files);
-    dir.setSorting(QDir::Name);
-    QFileInfoList list = dir.entryInfoList();
 
-    for (int i = 0; i < list.size(); ++i)
-    {
-        QFileInfo fileInfo = list.at(i);
-        QString line = fileInfo.fileName();
-        Images.push_back(std::string(dir.path().toUtf8().constData())+"/"+ std::string(line.toUtf8().constData()));
-    }
-
-    TTfSession FirstExample;
-
-    StopIfBad(FirstExample.SetGraphParams({{"dense_2/Softmax",}},"vgg16_input"));
-
-    StopIfBad(FirstExample.InitModel("/home/user/Rtv-VideoAnalytics/Bin/Configs/DemoNN/AggrClassificationEleronTF/abz_classifier.pb",0.5,true));
-
-    StopIfBad(FirstExample.SetImgParams({0,0,0},255,false));
-
-    cv::Mat img=cv::imread("/home/user/Videos/abz_3/aggr_classifier_results/2/False/49407_8596_26537_0.512951.jpg",1);
-    StopIfBad(FirstExample.SetInputDataCvMeth(img));
-    StopIfBad(FirstExample.Run());
-    auto Result1 = FirstExample.GetOutput()[0];
-
-
-    std::cout << Result1.matrix<float>() << "\n" <<std::endl;
-
-
-    for(int i=0;i<Images.size();i++)
-    {
-        cv::Mat img=cv::imread(Images[i],1);
-        StopIfBad(FirstExample.SetInputDataCvMeth(img));
-        StopIfBad(FirstExample.Run());
-        auto Result1 = FirstExample.GetOutput()[0];
-        std::cout << i << std::endl;
-
-        std::cout << Result1.matrix<float>() << "\n" <<std::endl;
-
-    }
-*/
+    DebugSqueezeDet("/home/vladburin/CV_Study/img/Example4.jpeg");
 
 
 
 
+    /*
+    //eleron
+    CheckAccuracy("/home/user/networks_for_test/Tested/eleron-inception3-12-0.91803.pb",{{"predictions/Softmax"},},"input_1");
 
+    //abz
+    CheckAccuracy("/home/user/networks_for_test/Tested/abz-densenet-121-38-0.72573.pb",{{"dense_1/Softmax"},},"densenet121_input");
 
-    SimpleInception();
-
-/*
     clock_t end_frame = clock();
 
     ClassificationTime = (double)(end_frame - start_frame) / CLOCKS_PER_SEC;
-
 
     std::string img_path = Environment->GetCurrentDataDir()+"classification_time";
     std::ofstream CheckTime;
@@ -92,10 +59,86 @@ int main(int argc, char *argv[])
 
 }
 
-int CheckAccuracy()
+
+int DebugSqueezeDet(std::string img_path)
+{
+    TTfSessionSqDet FirstExample;
+
+
+    std::vector <float> anchor_seed_values={36,     37,
+                                            366,    174,
+                                            115,    59,
+                                            162,    87,
+                                            38,     90,
+                                            258,    173,
+                                            224,    108,
+                                            78,     170,
+                                            72,     43  };
+
+    StopIfBad(FirstExample.SetConfigParams(24, 78, 9, 10, 1.0f, 0.4f, 0.5f, 1248, 384, 3,anchor_seed_values));
+
+    StopIfBad(FirstExample.SetGraphParams({{"lambda_1/Pad"}},"input"));
+
+    StopIfBad(FirstExample.InitModel("/home/vladburin/Squeeze/SqueezeDet_kitti_new.pb",0.5,true));
+
+    cv::Mat img=cv::imread(img_path,1);
+
+    StopIfBad(FirstExample.SetInputDataCvMeth(img));
+
+    StopIfBad(FirstExample.Run());
+
+
+    //Обработка полученных классов
+    auto Result1 = FirstExample.GetOutput();
+
+    //кол-во объектов
+    int Num = Result1[0].dim_size(0);
+    //номера классов распознанных объектов
+    auto Classes = Result1[1].tensor<long long int,1>();
+    //вероятность принадлежности к классу
+    auto Labels = Result1[0].tensor<float,1>();
+    //координаты бокса
+    auto Boxes = Result1[2].matrix<float>();
+
+    //вывод на исходное изображение боксов, номеров классов и вероятностей
+    cv::Mat image = img.clone();
+
+    cv::cvtColor(image, image, CV_BGR2RGB);
+
+
+    float x_scale = float(img.cols)/1248.f;
+    float y_scale = float(img.rows)/384.f;
+
+    for(int i=0; i < Num; i++)
+    {
+        cv::rectangle(image, {int(x_scale*(Boxes(i,1))), int(y_scale*(Boxes(i,0)))},
+                            {int(x_scale*(Boxes(i,3))), int(y_scale*(Boxes(i,2)))}, cv::Scalar(0,0,0),2);
+
+       cv::putText(image, std::to_string(Labels(i)), {int(x_scale*(Boxes(i,1))), int(y_scale*(Boxes(i,0)))}, 0, 1, {0,0,255},2);
+       cv::putText(image, std::to_string(Classes(i)), {int(x_scale*(Boxes(i,1))), int(y_scale*(Boxes(i,0)))+30}, 0, 1, {0,0,255},2);
+    }
+
+    cv::cvtColor(image, image, CV_BGR2RGB);
+
+    cv::namedWindow( "Original",cv::WINDOW_AUTOSIZE );
+    cv::namedWindow( "Detected",cv::WINDOW_AUTOSIZE );
+
+    cv::imshow( "Original", img);
+    cv::imshow( "Detected", image);
+
+    cv::waitKey(0);
+
+
+    return 0;
+}
+
+
+
+int CheckAccuracy(std::string input_model,std::vector<std::string> outputs,std::string inputs)
 {
     std::vector<std::string> ImagesBackground;
     QDir dir("/home/user/eleron_validation/0");
+    //QDir dir("/home/user/abz_val/background");
     dir.setFilter(QDir::Files);
     dir.setSorting(QDir::Name);
     QFileInfoList list = dir.entryInfoList();
@@ -109,6 +152,7 @@ int CheckAccuracy()
 
     std::vector<std::string> ImagesPeople;
     dir=("/home/user/eleron_validation/1");
+    //dir=("/home/user/abz_val/peoples");
     dir.setFilter(QDir::Files);
     dir.setSorting(QDir::Name);
     list = dir.entryInfoList();
@@ -122,6 +166,7 @@ int CheckAccuracy()
 
     std::vector<std::string> ImagesCars;
     dir=("/home/user/eleron_validation/2");
+    //dir=("/home/user/abz_val/cars");
     dir.setFilter(QDir::Files);
     dir.setSorting(QDir::Name);
     list = dir.entryInfoList();
@@ -152,9 +197,10 @@ int CheckAccuracy()
 
     StopIfBad(FirstExample.InitModel("/home/user/Eleron_new.pb",0.5,true));
     */
-    StopIfBad(FirstExample.SetGraphParams({{"InceptionV3/Predictions/Reshape_1"}},"input"));
 
-    StopIfBad(FirstExample.InitModel("/home/user/TF/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb",0.5,true))
+    StopIfBad(FirstExample.SetGraphParams(outputs,inputs));
+    std::string model=input_model;
+    StopIfBad(FirstExample.InitModel(model,0.9,true));
 
     StopIfBad(FirstExample.SetImgParams({0,0,0},255,false));
 
@@ -162,15 +208,27 @@ int CheckAccuracy()
     int FalsePeople=0;
     int FalseCars=0;
     int FalseGroup=0;
+    std::cout << "start" << std::endl;
+
+    double ClassificationTime;
+    std::vector<double> TimeArray;
 
     for(int i=0;i<ImagesBackground.size();i++)
     {
-        std::cout<< i <<std::endl;
+        //std::cout<< i <<std::endl;
         cv::Mat img=cv::imread(ImagesBackground[i],1);
+
+        ClassificationTime=0.0;
+        clock_t start_frame = clock();
 
         StopIfBad(FirstExample.SetInputDataCvMeth(img));
 
         StopIfBad(FirstExample.Run());
+
+        clock_t end_frame = clock();
+        ClassificationTime = (double)(end_frame - start_frame) / CLOCKS_PER_SEC;
+        TimeArray.push_back(ClassificationTime);
+
 
         auto Result1 = FirstExample.GetOutput()[0];
 
@@ -196,12 +254,19 @@ int CheckAccuracy()
 
     for(int i=0;i<ImagesPeople.size();i++)
     {
-        std::cout<< i <<std::endl;
+        //std::cout<< i <<std::endl;
         cv::Mat img=cv::imread(ImagesPeople[i],1);
+
+        ClassificationTime=0.0;
+        clock_t start_frame = clock();
 
         StopIfBad(FirstExample.SetInputDataCvMeth(img));
 
         StopIfBad(FirstExample.Run());
+
+        clock_t end_frame = clock();
+        ClassificationTime = (double)(end_frame - start_frame) / CLOCKS_PER_SEC;
+        TimeArray.push_back(ClassificationTime);
 
         auto Result1 = FirstExample.GetOutput()[0];
         //std::cout << Result1.matrix<float>()<< std::endl;
@@ -227,12 +292,19 @@ int CheckAccuracy()
 
     for(int i=0;i<ImagesCars.size();i++)
     {
-        std::cout<< i <<std::endl;
+        //std::cout<< i <<std::endl;
         cv::Mat img=cv::imread(ImagesCars[i],1);
+
+        ClassificationTime=0.0;
+        clock_t start_frame = clock();
 
         StopIfBad(FirstExample.SetInputDataCvMeth(img));
 
         StopIfBad(FirstExample.Run());
+
+        clock_t end_frame = clock();
+        ClassificationTime = (double)(end_frame - start_frame) / CLOCKS_PER_SEC;
+        TimeArray.push_back(ClassificationTime);
 
         auto Result1 = FirstExample.GetOutput()[0];
 
@@ -258,12 +330,19 @@ int CheckAccuracy()
 
     for(int i=0;i<ImagesGroup.size();i++)
     {
-        std::cout<< i <<std::endl;
+        //std::cout<< i <<std::endl;
         cv::Mat img=cv::imread(ImagesGroup[i],1);
+
+        ClassificationTime=0.0;
+        clock_t start_frame = clock();
 
         StopIfBad(FirstExample.SetInputDataCvMeth(img));
 
         StopIfBad(FirstExample.Run());
+
+        clock_t end_frame = clock();
+        ClassificationTime = (double)(end_frame - start_frame) / CLOCKS_PER_SEC;
+        TimeArray.push_back(ClassificationTime);
 
         auto Result1 = FirstExample.GetOutput()[0];
 
@@ -287,6 +366,7 @@ int CheckAccuracy()
 
     }
 
+    std::cout << model << std::endl;
     std::cout << "0:\t" << ImagesBackground.size() <<std::endl;
     std::cout << "False:\t" << FalseBackground <<std::endl << "\n";
 
@@ -307,6 +387,27 @@ int CheckAccuracy()
     std::cout << "All:\t" << NumPictures <<std::endl;
     std::cout << "AllFalse:\t" << NumFalses <<std::endl;
     std::cout << "Accuracy:\t" << accuracy <<std::endl;
+
+
+    double avarage=0;
+    for (int i=0;i<TimeArray.size();i++)
+    {
+        avarage+=TimeArray[i];
+    }
+
+    avarage=avarage/TimeArray.size();
+    std::cout << "Average:\t" << avarage <<std::endl;
+
+    double temp=0;
+    for (int i=0;i<TimeArray.size();i++)
+    {
+        temp+=pow((TimeArray[i]-avarage),2);
+    }
+
+    temp=temp/TimeArray.size();
+
+    temp=sqrt(temp);
+    std::cout <<"Standard Dev:\t"<< temp <<std::endl;
 
 }
 

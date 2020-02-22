@@ -17,7 +17,7 @@
 //#include "tensorflow/cc/framework/gradients.h"
 //#include "tensorflow/core/kernels/training_ops.h"
 #include "tensorflow/core/protobuf/meta_graph.pb.h"
-
+#include "tensorflow/cc/ops/standard_ops.h"
 
 #include <opencv2/opencv.hpp>
 #include "opencv2/highgui/highgui.hpp"
@@ -151,6 +151,7 @@ public:
     /*!
      * \brief Инициализация сессии.
      * \brief Загрузка замороженной PB модели графа в сессию
+     * \brief Первый запуск сети для инициализации CUDA
      * \param file_name путь к pb модели графа
      * \param gpu_fraction доля использования памяти GPU
      * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
@@ -205,7 +206,7 @@ public:
      *  Полученный тензор записывается в InputTensor экземпляра класса.
      * \param image входное изображение в формате cv::Mat
      */
-    bool SetInputDataCvMeth(cv::Mat& image);
+    virtual bool SetInputDataCvMeth(cv::Mat& image);
 
     /*!
      * \brief Преобразовывает RDK::UBitmap в тензор.
@@ -216,7 +217,7 @@ public:
     bool SetInputDataCvMeth(RDK::UBitmap& image);
 
     ///Запуск сессии, сохранение результата в Output экземляра класса
-    bool Run(void);
+    virtual bool Run(void);
 
     ///Получение результата
     const std::vector<tensorflow::Tensor>& GetOutput(void);
