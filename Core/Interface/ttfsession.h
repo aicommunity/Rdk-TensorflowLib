@@ -72,9 +72,6 @@ protected:
     ///Статус
     tensorflow::Status Status=Status.OK();
 
-    ///Класс, где хранится сам граф
-    tensorflow::GraphDef GraphDef;
-
     ///Названия выходных узлов
     std::vector<std::string> OutputName;
 
@@ -105,10 +102,9 @@ protected:
     ///Кол-во классов в случае классификатора
     int NumberOfClasses=0;
 
-    ///GPU
-    bool GpuGrow=false;
-
+    ///Сколько разрешается выделить памяти на процесс
     double GpuFraction=0.5;
+
     ///Флаг, указывающий была ли сделана сессия для трансформации
     bool IsTransSessCreated = false;
 
@@ -118,19 +114,16 @@ protected:
     ///Выходной вектор для преобразовани входного тензора
     std::vector<tensorflow::Tensor> OutputForTransform;
 
-    ///Граф для преобрзования входного тензора
-    tensorflow::GraphDef GraphForTransform;
-
     ///Метод задания начальных параметров входного изображения (тензора)
     ///Также проверяет наличие заданных входного и выходных узлов в графе
-    bool CheckInOutNodes();
+    bool CheckInOutNodes(tensorflow::GraphDef& graph_def);
 
     /*!
      * \brief Дополнительный метод инициализации сессии.
      * \param gpu_fraction доля использования памяти GPU
      * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
      */
-    bool InitSession(const double &gpu_fraction, const bool& allow_gpu_grow);
+    bool InitSession(const double &gpu_fraction);
 
     ///Вектор описания ошибок в формате строк
     const std::vector<std::string> DebugStr={
@@ -163,7 +156,7 @@ public:
      * \param gpu_fraction доля использования памяти GPU
      * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
      */
-    virtual bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0);
+    virtual bool InitModel(const std::string &file_name, const double &gpu_fraction, const int& device_number=0);
 
     /*!
      * \brief Деинициализация сессии.
@@ -183,6 +176,11 @@ public:
      * \param input_tensor загружаемый тензор
      */
     bool SetInputTensor(const tensorflow::Tensor &input_tensor);
+
+    /*!
+     * \brief Создание графа предобработки
+     */
+    bool CreateGraphForTransform();
 
     /*!
      * \brief Задание параметров входного тензора.

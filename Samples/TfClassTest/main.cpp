@@ -31,15 +31,13 @@ int DetectFrames(QString str, std::string path, std::string savefolder);
 int DebugSqueezeDet(std::string img_path);
 
 
-
-
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    DebugSqueezeDet("/home/vladburin/TF/trash/CameraImgs/images01010.jpeg");
+    //DebugSqueezeDet("/home/vladburin/TF/trash/CameraImgs/images01010.jpeg");
 
-
+    SimpleInception();
     /*
     //eleron
     CheckAccuracy("/home/user/networks_for_test/Tested/eleron-inception3-12-0.91803.pb",{{"predictions/Softmax"},},"input_1");
@@ -76,7 +74,7 @@ int DebugSqueezeDet(std::string img_path)
 
     StopIfBad(FirstExample.SetImgParams({0,0,0},1,true));
 
-    StopIfBad(FirstExample.InitModel("/home/vladburin/Squeeze/SqueezeDet_kitti_new.pb",0.5,true));
+    StopIfBad(FirstExample.InitModel("/home/vladburin/Squeeze/SqueezeDet_kitti_new.pb",0.5));
 
     cv::Mat img=cv::imread(img_path,1);
 
@@ -93,6 +91,7 @@ int DebugSqueezeDet(std::string img_path)
     //кол-во объектов
     int Num = Result1[0].dim_size(0);
     //номера классов распознанных объектов
+
     auto Classes = Result1[1].tensor<long long int,1>();
     //вероятность принадлежности к классу
     auto Labels = Result1[2].tensor<float,1>();
@@ -108,14 +107,16 @@ int DebugSqueezeDet(std::string img_path)
     float x_scale = float(img.cols)/1248.f;
     float y_scale = float(img.rows)/384.f;
 
+
     for(int i=0; i < Num; i++)
     {
-        cv::rectangle(image, {int(x_scale*(Boxes(i,1))), int(y_scale*(Boxes(i,0)))},
+       cv::rectangle(image, {int(x_scale*(Boxes(i,1))), int(y_scale*(Boxes(i,0)))},
                             {int(x_scale*(Boxes(i,3))), int(y_scale*(Boxes(i,2)))}, cv::Scalar(0,0,0),2);
 
        cv::putText(image, std::to_string(Labels(i)), {int(x_scale*(Boxes(i,1))), int(y_scale*(Boxes(i,0)))}, 0, 1, {0,0,255},2);
        cv::putText(image, std::to_string(Classes(i)), {int(x_scale*(Boxes(i,1))), int(y_scale*(Boxes(i,0)))+30}, 0, 1, {0,0,255},2);
     }
+
 
     cv::cvtColor(image, image, CV_BGR2RGB);
 
@@ -475,42 +476,26 @@ int DetectFrames(QString str, std::string path, std::string savefolder)
 int SimpleInception()
 {
 
-    cv::Mat img=cv::imread("/home/user/TF/trash/grace_hopper.jpg",1);
+    cv::Mat img=cv::imread("/home/vladburin/TF/trash/grace_hopper.jpg",1);
 
     TTfSession FirstExample;
 
     StopIfBad(FirstExample.SetGraphParams({{"InceptionV3/Predictions/Reshape_1"}},"input"));
 
-    StopIfBad(FirstExample.InitModel("/home/user/TF/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb",0.5,true))
+    StopIfBad(FirstExample.InitModel("/home/vladburin/TF/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb",0.5))
 
     StopIfBad(FirstExample.SetImgParams({0,0,0},255));
 
     StopIfBad(FirstExample.SetInputDataCvMeth(img));
+
 
     StopIfBad(FirstExample.Run());
 
     auto Result1 = FirstExample.GetOutput();
 
-    std::string labels = "/home/user/TF/FrozenModels/inceptionv3_2016/imagenet_slim_labels.txt";
+    std::string labels = "/home/vladburin/TF/FrozenModels/inceptionv3_2016/imagenet_slim_labels.txt";
 
     PrintTopLabels(Result1, labels);
 
-    FirstExample.UnInit();
-
-    StopIfBad(FirstExample.SetGraphParams({{"InceptionV3/Predictions/Reshape_1"}},"input"));
-
-    StopIfBad(FirstExample.InitModel("/home/user/TF/FrozenModels/inceptionv3_2016/inception_v3_2016_08_28_frozen.pb",0.1,true))
-
-    StopIfBad(FirstExample.SetImgParams({0,0,0},255));
-
-    StopIfBad(FirstExample.SetInputDataCvMeth(img));
-
-    StopIfBad(FirstExample.Run());
-
-     Result1 = FirstExample.GetOutput();
-
-    labels = "/home/user/TF/FrozenModels/inceptionv3_2016/imagenet_slim_labels.txt";
-
-    PrintTopLabels(Result1, labels);
 
 }

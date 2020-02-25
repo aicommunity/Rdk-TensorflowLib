@@ -32,9 +32,6 @@ ULProperty<bool,UTfComponent, ptPubParameter> UseBGR;
 ///Доля использования памяти GPU
 ULProperty<double,UTfComponent, ptPubParameter> GpuFraction;
 
-///Флаг отвечающий за выделение памяти GPU по мере необходимости
-ULProperty<bool,UTfComponent, ptPubParameter> GpuGrow;
-
 ///Объект для использования моделей нейронных сетей
 TTF::TTfSession* TfObject;
 protected: // Входы и выходы
@@ -80,8 +77,6 @@ bool SetImgSub(const std::vector<float> &value);
 bool SetUseBGR(const bool &value);
 
 bool SetGpuFraction(const double &value);
-
-bool SetGpuGrow(const bool &value);
 
 // ---------------------
 // Методы управления переменными состояния

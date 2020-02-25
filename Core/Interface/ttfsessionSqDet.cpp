@@ -15,12 +15,12 @@ TTfSessionSqDet::~TTfSessionSqDet(void)
 
 }
 
-bool TTfSessionSqDet::InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow, const int& device_number)
+bool TTfSessionSqDet::InitModel(const std::string &file_name, const double &gpu_fraction, const int& device_number)
 {
     if(!SetConfigParams(ConfigPath))
         return false;
 
-    if(!TTfSession::InitModel(file_name,gpu_fraction,allow_gpu_grow,device_number))
+    if(!TTfSession::InitModel(file_name,gpu_fraction,device_number))
         return false;
 
     return true;
@@ -141,8 +141,13 @@ bool TTfSessionSqDet::CreatePostProcGraph()
        return false;
    }
 
+   //Определение параметров сессии
+   tensorflow::SessionOptions opts;
+   opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(GpuFraction);
+   opts.config.mutable_gpu_options()->set_allow_growth(true);
+
     //Инициализация сессии
-    Status = tensorflow::NewSession(tensorflow::SessionOptions(), &SessionForPostProc);
+    Status = tensorflow::NewSession(opts, &SessionForPostProc);
     if(!Status.ok())
     {
         ErCode = TfErrorCode::BAD_STATUS;
@@ -351,7 +356,6 @@ bool TTfSessionSqDet::SetConfigPath(const std::string& path)
 
 bool TTfSessionSqDet::Run(void)
 {
-    std::cout << "Run Sqdet" << std::endl;
     if(!TTfSession::Run())
         return false;
 
@@ -385,7 +389,7 @@ bool TTfSessionSqDet::SetInputDataCvMeth(cv::Mat& image)
 
     float mean = (cv_mean[0]+cv_mean[1]+cv_mean[2])/3;
     float stddev = (cv_stddev[0]+cv_stddev[1]+cv_stddev[2])/3;
-    std::cout << "Run PredProc" << std::endl;
+
     if(!SetImgParams({mean,mean,mean},stddev,ImgBgr))
         return false;
 

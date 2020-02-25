@@ -34,7 +34,7 @@ public:
 
     bool SetConfigPath(const std::string& path);
 
-    bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0) override;
+    bool InitModel(const std::string &file_name, const double &gpu_fraction, const int& device_number=0) override;
 protected:
 
     ///Создание графа постобработки

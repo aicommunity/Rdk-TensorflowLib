@@ -18,7 +18,6 @@ UTfComponent::UTfComponent(void)
       ImgSub("ImgSub",this,&UTfComponent::SetImgSub),
       UseBGR("UseBGR",this,&UTfComponent::SetUseBGR),
       GpuFraction("GpuFraction",this,&UTfComponent::SetGpuFraction),
-      GpuGrow("GpuGrow",this,&UTfComponent::SetGpuGrow),
       DebugString("DebugString",this),
       ExpectedHeight("ExpectedHeight",this),
       ExpectedWidth("ExpectedWidth",this),
@@ -80,11 +79,6 @@ bool UTfComponent::SetGpuFraction(const double &value)
     return true;
 }
 
-bool UTfComponent::SetGpuGrow(const bool &value)
-{
-    Ready=false;
-    return true;
-}
 
 // ---------------------
 // Методы управления переменными состояния
@@ -113,8 +107,6 @@ bool UTfComponent::ADefault(void)
     UseBGR=0;
 
     GpuFraction=0.8;
-
-    GpuGrow=true;
 
     return ATfDefault();
 }
@@ -164,7 +156,7 @@ bool UTfComponent::ABuild(void)
     std::string RealPath=GetEnvironment()->GetCurrentDataDir()+std::string(PbModelPath);
     //Загрузка модели нейросети
     //GetEnvironment()->GetCurrentDataDir()+
-    if(!TfObject->InitModel(RealPath,GpuFraction,GpuGrow))
+    if(!TfObject->InitModel(RealPath,GpuFraction))
     {
         DebugString=TfObject->GetDebugStr();
         BuildDone=false;
