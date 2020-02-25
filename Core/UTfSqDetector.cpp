@@ -1,9 +1,9 @@
-#ifndef RDK_UTFDETECTOR_CPP
-#define RDK_UTFDETECTOR_CPP
+#ifndef RDK_UTFSQDETECTOR_CPP
+#define RDK_UTFSQDETECTOR_CPP
 
 
 
-#include "UTfDetector.h"
+#include "UTfSqDetector.h"
 
 namespace RDK {
 
@@ -11,7 +11,7 @@ namespace RDK {
 // --------------------------
 // Конструкторы и деструкторы
 // --------------------------
-UTfDetector::UTfDetector(void):
+UTfSqDetector::UTfSqDetector(void):
     InputImage("InputImage",this),
     UseDebugImage("UseDebugImage",this),
     UseRelativeCoords("UseRelativeCoords",this),
@@ -19,14 +19,14 @@ UTfDetector::UTfDetector(void):
     DebugImage("DebugImage",this),
     OutputRects("OutputRects",this),
     OutputClasses("OutputClasses",this),
-    OutputReliability("OutputReliability",this)
+    OutputReliability("OutputReliability",this),
+    ConfigPath("ConfigPath",this,&UTfSqDetector::SetConfigPath)
 {
-    TfObject = new TTF::TTfSession;
+    TfObject = &TfDetector;
 }
 
-UTfDetector::~UTfDetector(void)
+UTfSqDetector::~UTfSqDetector(void)
 {
-    delete TfObject;
 }
 // --------------------------
 
@@ -35,7 +35,11 @@ UTfDetector::~UTfDetector(void)
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-
+bool UTfSqDetector::SetConfigPath(const std::string &value)
+{
+    Ready=false;
+    return true;
+}
 // ---------------------
 // Методы управления переменными состояния
 // ---------------------
@@ -45,9 +49,9 @@ UTfDetector::~UTfDetector(void)
 // Системные методы управления объектом
 // --------------------------
 // Выделяет память для новой чистой копии объекта этого класса
-UTfDetector* UTfDetector::New(void)
+UTfSqDetector* UTfSqDetector::New(void)
 {
- return new UTfDetector;
+ return new UTfSqDetector;
 }
 // --------------------------
 
@@ -56,14 +60,14 @@ UTfDetector* UTfDetector::New(void)
 // Скрытые методы управления счетом
 // --------------------------
 // Восстановление настроек по умолчанию и сброс процесса счета
-bool UTfDetector::ATfDefault(void)
+bool UTfSqDetector::ATfDefault(void)
 {
 
     return true;
 }
 
 // Сброс процесса счета без потери настроек
-bool UTfDetector::ATfReset(void)
+bool UTfSqDetector::ATfReset()
 {
 
     return true;
@@ -73,16 +77,20 @@ bool UTfDetector::ATfReset(void)
 // после настройки параметров
 // Автоматически вызывает метод Reset() и выставляет Ready в true
 // в случае успешной сборки
-bool UTfDetector::ATfBuild()
+bool UTfSqDetector::ATfBuild()
 {
+    if(!TfDetector.SetConfigPath(ConfigPath))
+    {
+        return false;
+    }
     return true;
 }
 
 // Выполняет расчет этого объекта
-bool UTfDetector::ATfCalculate(void)
+bool UTfSqDetector::ATfCalculate(void)
 {
     if(!InputImage.IsConnected())
-     return true;
+        return true;
 
     UBitmap &bmp = *InputImage;
     if(!Detect(bmp, *OutputRects, *OutputClasses, *OutputReliability))
@@ -91,8 +99,8 @@ bool UTfDetector::ATfCalculate(void)
     OutputObjects->Resize(OutputRects->GetRows(), 6);
     for(int i=0;i<OutputRects->GetRows();i++)
     {
-     double wm = (*UseRelativeCoords)?(InputImage->GetWidth()):(1);
-     double hm = (*UseRelativeCoords)?(InputImage->GetHeight()):(1);
+     double wm = (*UseRelativeCoords)?double(InputImage->GetWidth())/double(ExpectedWidth):(1);
+     double hm = (*UseRelativeCoords)?double(InputImage->GetHeight())/double(ExpectedHeight):(1);
      (*OutputObjects)(i,0) = (int)((*OutputRects)(i,1)*wm);
      (*OutputObjects)(i,1) = (int)((*OutputRects)(i,0)*hm);
      (*OutputObjects)(i,2) = (int)((*OutputRects)(i,3)*wm);
@@ -150,7 +158,7 @@ bool UTfDetector::ATfCalculate(void)
 }
 // --------------------------
 
-bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<int> &output_classes, MDMatrix<double> &reliabilities)
+bool UTfSqDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<int> &output_classes, MDMatrix<double> &reliabilities)
 {
     if(!TfObject->SetInputDataCvMeth(bmp))
     {
@@ -167,16 +175,8 @@ bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<
         //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return false;
     }
-    int num_detections;
-    if(TfObject->GetOutput().size()==4)
-    {
-        num_detections=int(TfObject->GetOutput()[3].scalar<float>()());
-    }
-    else
-    {
-       num_detections=TfObject->GetOutput()[1].dim_size(1);
 
-    }
+    int num_detections=TfObject->GetOutput()[1].dim_size(0);
 
 
     output_rects.Resize(num_detections,4);
@@ -187,10 +187,10 @@ bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<
     {
         for(int x=0; x<4;x++)
         {
-            output_rects(y,x)=TfObject->GetOutput()[0].tensor<float,3>()(0,y,x);
+            output_rects(y,x)=TfObject->GetOutput()[0].matrix<float>()(y,x);
         }
-        reliabilities(y,0)=(TfObject->GetOutput()[2].matrix<float>()(0,y));
-        output_classes(y,0)=int(TfObject->GetOutput()[1].matrix<float>()(0,y));
+        reliabilities(y,0)=(TfObject->GetOutput()[2].tensor<float,1>()(y));
+        output_classes(y,0)=int(TfObject->GetOutput()[1].tensor<long long int,1>()(y));
     }
     return true;
 }

@@ -15,22 +15,67 @@ TTfSessionSqDet::~TTfSessionSqDet(void)
 
 }
 
-bool TTfSessionSqDet::SetConfigParams(const int& anchor_height, const int& anchor_width, const int& anchor_per_grid,
-                                      const int& max_detection, const float& exp_thresh, const float& nm_thresh,
-                                      const float& prob_thresh, const int& img_width, const int& img_height,
-                                      const int&num_classes, const std::vector <float> anchor_seed_value)
+bool TTfSessionSqDet::InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow, const int& device_number)
 {
-    AnchorHeight    = anchor_height;
-    AnchorWidth     = anchor_width;
-    AnchorPerGrid   = anchor_per_grid;
-    MaxDetections   = max_detection;
-    ExpThresh       = exp_thresh;
-    NMthreshold     = nm_thresh;
-    ProbThreshold   = prob_thresh;
-    AnchorSeedValues= anchor_seed_value;
-    ImgHeight       = img_height;
-    ImgWidth        = img_width;
-    NumberOfClasses = num_classes;
+    if(!SetConfigParams(ConfigPath))
+        return false;
+
+    if(!TTfSession::InitModel(file_name,gpu_fraction,allow_gpu_grow,device_number))
+        return false;
+
+    return true;
+}
+
+
+bool TTfSessionSqDet::SetConfigParams(const std::string& config_path)
+{
+    try
+    {
+        boost::property_tree::ptree root;
+
+        //Парсинг файла конфигурации
+        boost::property_tree::read_json(config_path, root);
+
+        // Считывание значений
+        AnchorHeight    = root.get<int>("ANCHORS_HEIGHT", 0);
+        AnchorWidth     = root.get<int>("ANCHORS_WIDTH", 0);
+        AnchorPerGrid   = root.get<int>("ANCHOR_PER_GRID", 0);
+        MaxDetections   = root.get<int>("TOP_N_DETECTION", 0);
+        ImgHeight       = root.get<int>("IMAGE_HEIGHT", 0);
+        ImgWidth        = root.get<int>("IMAGE_WIDTH", 0);
+        NumberOfClasses = root.get<int>("CLASSES", 0);
+
+        ExpThresh       = root.get<float>("EXP_THRESH", 0);
+        NMthreshold     = root.get<float>("NMS_THRESH", 0);
+        ProbThreshold   = root.get<float>("PROB_THRESH", 0);
+
+
+        std::vector<float> anchor_seeds;
+        //auto anchor_seed=root.get<std::vector<float>>("ANCHOR_SEED",{});
+
+        for (boost::property_tree::ptree::value_type &row : root.get_child("ANCHOR_SEED"))
+        {
+            for (boost::property_tree::ptree::value_type &cell : row.second)
+            {
+                anchor_seeds.push_back(cell.second.get_value<float>());
+            }
+
+        }
+        AnchorSeedValues=anchor_seeds;
+
+    }
+    catch (std::exception const& e)
+    {
+        ErCode=TfErrorCode::EXCEPTION;
+        ExceptionString=e.what();
+        return false;
+    }
+
+    if(AnchorSeedValues.size()!=AnchorPerGrid*2)
+    {
+        ErCode=TfErrorCode::BAD_CONFIG;
+        return false;
+    }
 
     if(!CreatePostProcGraph())
     {
@@ -53,7 +98,7 @@ bool TTfSessionSqDet::CreatePostProcGraph()
 
 
     //Кусок графа для рассчёта AnchorBox и расчёт AnchorBox
-    tensorflow::Tensor anchor_seed(tensorflow::DataType::DT_FLOAT, tensorflow::TensorShape({9,2}));
+    tensorflow::Tensor anchor_seed(tensorflow::DataType::DT_FLOAT, tensorflow::TensorShape({AnchorPerGrid,2}));
     auto tmp_data = anchor_seed.flat<float>();
 
 
@@ -298,9 +343,15 @@ bool TTfSessionSqDet::CreatePostProcGraph()
 
 }
 
+bool TTfSessionSqDet::SetConfigPath(const std::string& path)
+{
+    ConfigPath=path;
+    return true;
+}
 
 bool TTfSessionSqDet::Run(void)
 {
+    std::cout << "Run Sqdet" << std::endl;
     if(!TTfSession::Run())
         return false;
 
@@ -316,7 +367,7 @@ bool TTfSessionSqDet::FilterPredicton()
 {
     auto input = Output[0];
 
-    Status = SessionForPostProc->Run({{"input",input},},{"Scores","Classes","Boxes"},{},&Output);
+    Status = SessionForPostProc->Run({{"input",input},},{"Boxes","Classes","Scores"},{},&Output);
     if(!Status.ok())
     {
         ErCode = TfErrorCode::BAD_STATUS;
@@ -334,8 +385,8 @@ bool TTfSessionSqDet::SetInputDataCvMeth(cv::Mat& image)
 
     float mean = (cv_mean[0]+cv_mean[1]+cv_mean[2])/3;
     float stddev = (cv_stddev[0]+cv_stddev[1]+cv_stddev[2])/3;
-
-    if(!SetImgParams({mean,mean,mean},stddev,true))
+    std::cout << "Run PredProc" << std::endl;
+    if(!SetImgParams({mean,mean,mean},stddev,ImgBgr))
         return false;
 
     if(!TTfSession::SetInputDataCvMeth(image))

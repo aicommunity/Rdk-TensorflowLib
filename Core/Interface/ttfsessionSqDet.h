@@ -3,7 +3,8 @@
 
 
 #include "ttfsession.h"
-
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 namespace TTF
 {
 
@@ -16,10 +17,7 @@ public:
 
     /// Задание параметров конфигурации.
     /// Создание графа постобработки данных
-    bool SetConfigParams(const int& anchor_height, const int& anchor_width, const int& anchor_per_grid,
-                         const int& max_detection, const float& exp_thresh, const float& nm_thresh,
-                         const float& prob_thresh, const int& img_width, const int& img_height,
-                         const int&num_classes, const std::vector <float> anchor_seed_value);
+    bool SetConfigParams(const std::string& config_path);
 
 
     /// Запуск сессии, постаобработка результатов, сохранение результата в Output
@@ -34,6 +32,9 @@ public:
      */
     bool SetInputDataCvMeth(cv::Mat& image) override;
 
+    bool SetConfigPath(const std::string& path);
+
+    bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0) override;
 protected:
 
     ///Создание графа постобработки
@@ -42,6 +43,8 @@ protected:
 
     /// Постобработка результатов
     bool FilterPredicton();
+
+    std::string ConfigPath="";
 
     ///Сессия для постобработки
     tensorflow::Session* SessionForPostProc;

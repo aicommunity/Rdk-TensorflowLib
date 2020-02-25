@@ -8,6 +8,12 @@
 #include "../../Core/Interface/label_image.h"
 #include "../../Core/Interface/ttfsessionSqDet.h"
 
+
+//#include <boost/config/compiler/visualc.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+//#include <boost/foreach.hpp>
+
 using namespace TTF;
 
 #define StopIfBad(val) if(!val)                         \
@@ -27,14 +33,11 @@ int DebugSqueezeDet(std::string img_path);
 
 
 
-
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    DebugSqueezeDet("/home/vladburin/CV_Study/img/Example4.jpeg");
-
-
+    DebugSqueezeDet("/home/vladburin/TF/trash/CameraImgs/images01010.jpeg");
 
 
     /*
@@ -47,7 +50,10 @@ int main(int argc, char *argv[])
     clock_t end_frame = clock();
 
     ClassificationTime = (double)(end_frame - start_frame) / CLOCKS_PER_SEC;
+    auto begin = std::chrono::steady_clock::now();
+    auto end = std::chrono::steady_clock::now();
 
+    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
     std::string img_path = Environment->GetCurrentDataDir()+"classification_time";
     std::ofstream CheckTime;
     CheckTime.open(img_path, std::ios::app);
@@ -64,20 +70,11 @@ int DebugSqueezeDet(std::string img_path)
 {
     TTfSessionSqDet FirstExample;
 
-
-    std::vector <float> anchor_seed_values={36,     37,
-                                            366,    174,
-                                            115,    59,
-                                            162,    87,
-                                            38,     90,
-                                            258,    173,
-                                            224,    108,
-                                            78,     170,
-                                            72,     43  };
-
-    StopIfBad(FirstExample.SetConfigParams(24, 78, 9, 10, 1.0f, 0.4f, 0.5f, 1248, 384, 3,anchor_seed_values));
+    StopIfBad(FirstExample.SetConfigPath("/home/vladburin/Squeeze/squeezedet_keras-master/kitti.config"));
 
     StopIfBad(FirstExample.SetGraphParams({{"lambda_1/Pad"}},"input"));
+
+    StopIfBad(FirstExample.SetImgParams({0,0,0},1,true));
 
     StopIfBad(FirstExample.InitModel("/home/vladburin/Squeeze/SqueezeDet_kitti_new.pb",0.5,true));
 
@@ -86,6 +83,8 @@ int DebugSqueezeDet(std::string img_path)
     StopIfBad(FirstExample.SetInputDataCvMeth(img));
 
     StopIfBad(FirstExample.Run());
+
+    //StopIfBad(FirstExample.Run());
 
 
     //Обработка полученных классов
@@ -96,9 +95,9 @@ int DebugSqueezeDet(std::string img_path)
     //номера классов распознанных объектов
     auto Classes = Result1[1].tensor<long long int,1>();
     //вероятность принадлежности к классу
-    auto Labels = Result1[0].tensor<float,1>();
+    auto Labels = Result1[2].tensor<float,1>();
     //координаты бокса
-    auto Boxes = Result1[2].matrix<float>();
+    auto Boxes = Result1[0].matrix<float>();
 
     //вывод на исходное изображение боксов, номеров классов и вероятностей
     cv::Mat image = img.clone();

@@ -42,7 +42,9 @@ enum TfErrorCode{
     OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH,
     WRONG_IMAGE_CHANNELS_NUMBER,
     TYPE_UNSOPPORTED_FOR_CV_METH,
-    COPY_DATA_FROM_NULL_PTR
+    COPY_DATA_FROM_NULL_PTR,
+    EXCEPTION,
+    BAD_CONFIG
 };
 
 /*!
@@ -54,6 +56,9 @@ protected:
 
     ///Состояние кода ошибки
     TfErrorCode ErCode=OK;
+
+    ///Строка для исключений
+    std::string ExceptionString;
 
     ///Вектор входных узлов и их имен
     std::vector<std::pair<std::string, tensorflow::Tensor>> Input;
@@ -133,13 +138,15 @@ protected:
         "",
         "Set input node name with SetGraphParams",
         "Input node wasn't found in the Graph",
-        "Empty input tensor. Set it with SetInputData",
+        "Empty input tensor",
         "Division by zero. Set image parameters with SetImgParams",
         "Set output node name with SetGraphParams",
         "Some of output nodes wasn't found in the graph",
         "Number of channels in input doesn't equal to input tensor channel number",
-        "This data type are not supported for SetInputDataCvMeth. Use SetInputDataTfMeth",
-        "Please, check that pointer you try to copy from is not NULL"
+        "Desired data type are not supported for SetInputDataCvMeth. Use SetInputDataTfMeth",
+        "Try to copy from NULL pointer",
+        "",
+        "Wrong config"
     };
 
 public:
@@ -156,7 +163,7 @@ public:
      * \param gpu_fraction доля использования памяти GPU
      * \param allow_gpu_grow выделять ли всю память сразу, либо по мере необходимости (true->выделять постепенно)
      */
-    bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0);
+    virtual bool InitModel(const std::string &file_name, const double &gpu_fraction, const bool& allow_gpu_grow=false, const int& device_number=0);
 
     /*!
      * \brief Деинициализация сессии.

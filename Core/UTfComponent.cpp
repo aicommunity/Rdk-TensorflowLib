@@ -126,6 +126,15 @@ bool UTfComponent::ADefault(void)
 bool UTfComponent::ABuild(void)
 {
     /*
+    if(!TfObject.UnInit())
+    {
+        DebugString=TfObject.GetDebugStr();
+        BuildDone=false;
+        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        return true;
+    }
+    */
+    /*
     if(BuildDone)
     {
         if(!TfObject.UnInit())
@@ -135,47 +144,55 @@ bool UTfComponent::ABuild(void)
             return true;
         }
     }
-    */
 
+    */
+    if(!ATfBuild())
+    {
+        DebugString=TfObject->GetDebugStr();
+        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        return true;
+    }
 
     //Задание параметров модели нейросети
-    if(!TfObject.SetGraphParams(OutputNodeName,InputNodeName))
+    if(!TfObject->SetGraphParams(OutputNodeName,InputNodeName))
     {
-        DebugString=TfObject.GetDebugStr();
+        DebugString=TfObject->GetDebugStr();
         BuildDone=false;
-        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
     std::string RealPath=GetEnvironment()->GetCurrentDataDir()+std::string(PbModelPath);
     //Загрузка модели нейросети
     //GetEnvironment()->GetCurrentDataDir()+
-    if(!TfObject.InitModel(RealPath,GpuFraction,GpuGrow))
+    if(!TfObject->InitModel(RealPath,GpuFraction,GpuGrow))
     {
-        DebugString=TfObject.GetDebugStr();
+        DebugString=TfObject->GetDebugStr();
         BuildDone=false;
-        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return true;
     }
 
     //Установка параметров нормализации
-    if(!TfObject.SetImgParams(ImgSub,ImgDiv,UseBGR))
+    if(!TfObject->SetImgParams(ImgSub,ImgDiv,UseBGR))
     {
-        DebugString=TfObject.GetDebugStr();
+        DebugString=TfObject->GetDebugStr();
         BuildDone=false;
-        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
 
 
-    std::vector<int> Params=TfObject.GetImgParams();
+    std::vector<int> Params=TfObject->GetImgParams();
 
     ExpectedHeight=Params[0];
     ExpectedWidth=Params[1];
     ExpectedChannels=Params[2];
 
 
-    DebugString=TfObject.GetDebugStr();
-    return ATfBuild();
+    DebugString=TfObject->GetDebugStr();
+    BuildDone=true;
+
+    return true;
 }
 
 // Сброс процесса счета без потери настроек
@@ -190,8 +207,8 @@ bool UTfComponent::ACalculate(void)
    //Если модель собрана с ошибками
    if(!BuildDone)
    {
-       DebugString=TfObject.GetDebugStr();
-       LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+       DebugString=TfObject->GetDebugStr();
+       //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
        return true;
    }
 

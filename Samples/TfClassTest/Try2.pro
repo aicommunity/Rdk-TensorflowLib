@@ -98,3 +98,14 @@ contains(DEFINES, RDK_USE_CUDA) {
  LIBS += -L$$(OPENCV3_PATH)/lib $$OPENCV_LIBS_LIST
 }
 
+
+INCLUDEPATH += $$(BOOST_PATH)/include
+
+ LIBS += -L$$(BOOST_PATH)/lib -lboost_system \
+  -lboost_system \
+  -lboost_chrono \
+  -lboost_thread \
+  -lboost_program_options \
+  -lboost_filesystem \
+  -lboost_date_time \
+  -lboost_timer

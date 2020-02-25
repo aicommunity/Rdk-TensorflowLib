@@ -29,7 +29,7 @@ INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-tensorflow/external/com_google_absl
 INCLUDEPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
 INCLUDEPATH += $$(TENSORFLOW_PATH)
-DEPENDPATH += $$(TENSORFLOW_PATH)/bazel-bin/tensorflow
+
 
 unix {
     DESTDIR = $$PWD/../../../../Bin/Platform/Linux/Lib.Qt
@@ -41,6 +41,17 @@ windows {
     LIBS += -L$$(TENSORFLOW_PATH)/bazel-bin/tensorflow -llibtensorflow_framework.dll -llibtensorflow.dll -llibtensorflow_cc.dll
 }
 
+INCLUDEPATH += $$(BOOST_PATH)/include
+
+ LIBS += -L$$(BOOST_PATH)/lib -lboost_system \
+  -lboost_system \
+  -lboost_chrono \
+  -lboost_thread \
+  -lboost_program_options \
+  -lboost_filesystem \
+  -lboost_date_time \
+  -lboost_timer
+
 HEADERS += \
     ../../Core/Lib.h \
     ../../Core/Interface/ttfsession.h \
@@ -48,6 +59,7 @@ HEADERS += \
     ../../Core/UTfComponent.h  \
     ../../Core/UTfClassifier.h  \
     ../../Core/UTfDetector.h  \
+    ../../Core/UTfSqDetector.h  \
     ../../Core/TAggrClassifierTF.h  \
 
 
@@ -58,6 +70,7 @@ SOURCES += \
     ../../Core/UTfComponent.cpp \
     ../../Core/UTfClassifier.cpp \
     ../../Core/UTfDetector.cpp  \
+    ../../Core/UTfSqDetector.cpp  \
     ../../Core/TAggrClassifierTF.cpp  \
 
 

@@ -43,7 +43,7 @@ bool TTfSession::CheckInOutNodes()
     ImgChannels  =  int(Node.attr().at("shape").shape().dim(3).size());
 
     //ѕроверка на существование выходных узлов
-    for(uint j=0; j < OutputName.size(); j++)
+    for(int j=0; j < OutputName.size(); j++)
     {
         for(int i=0; i<GraphDef.node_size();i++)
         {
@@ -170,12 +170,13 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
 
 bool TTfSession::UnInit(void)
 {
-    Status = Session->Close();
+    /*Status = Session->Close();
     if(!Status.ok())
     {
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
+    */
     GraphDef.Clear();
 
     if(IsTransSessCreated)
@@ -272,7 +273,7 @@ bool TTfSession::SetImgParams(const std::vector<float> & sub, const float & div,
     return true;
 }
 
-/*
+
 bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
 {
 
@@ -420,7 +421,7 @@ bool TTfSession::SetInputDataCvMeth(RDK::UBitmap& image)
 
     return true;
 }
-*/
+
 
 bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 {
@@ -681,6 +682,10 @@ const std::string TTfSession::GetDebugStr(void)
         return Status.ToString();
     }
 
+    if(ErCode==EXCEPTION)
+    {
+        return ExceptionString;
+    }
     return DebugStr[ErCode];
 }
 

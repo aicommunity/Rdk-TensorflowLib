@@ -3,6 +3,7 @@
 
 #include "../../../Rdk/Deploy/Include/rdk.h"
 #include "Interface/ttfsession.h"
+#include "Interface/ttfsessionSqDet.h"
 namespace RDK {
 
 class UTfComponent:public RDK::UNet
@@ -35,7 +36,7 @@ ULProperty<double,UTfComponent, ptPubParameter> GpuFraction;
 ULProperty<bool,UTfComponent, ptPubParameter> GpuGrow;
 
 ///Объект для использования моделей нейронных сетей
-TTF::TTfSession TfObject;
+TTF::TTfSession* TfObject;
 protected: // Входы и выходы
 
 

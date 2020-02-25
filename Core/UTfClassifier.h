@@ -40,7 +40,7 @@ protected: // Переменные состояния
 ULProperty<double,UTfClassifier, ptPubState> ClassificationTime;
 
 /// Количество классов объектов (какой размер будет у вектора)
-ULProperty<int,UTfClassifier, ptPubState> NumClasses;
+ULProperty<int,UTfClassifier, ptPubParameter> NumClasses;
 
 public: // Методы
 // --------------------------
@@ -54,7 +54,7 @@ virtual ~UTfClassifier(void);
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-
+bool SetNumClasses(const int &value);
 // ---------------------
 // Методы управления переменными состояния
 // ---------------------

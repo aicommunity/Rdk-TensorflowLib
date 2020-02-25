@@ -22,13 +22,14 @@ UTfClassifier::UTfClassifier(void):
     OutputConfidences("OutputConfidences", this),
     DebugImage("DebugImage",this),
     ClassificationTime("ClassificationTime",this),
-    NumClasses("NumClasses",this)
+    NumClasses("NumClasses",this,&UTfClassifier::SetNumClasses)
 {
-
+    TfObject = new TTF::TTfSession;
 }
 
 UTfClassifier::~UTfClassifier(void)
 {
+    delete TfObject;
 }
 // --------------------------
 
@@ -37,7 +38,11 @@ UTfClassifier::~UTfClassifier(void)
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-
+bool UTfClassifier::SetNumClasses(const int &value)
+{
+    Ready=false;
+    return true;
+}
 // ---------------------
 // Методы управления переменными состояния
 // ---------------------
@@ -79,8 +84,7 @@ bool UTfClassifier::ATfReset(void)
 // в случае успешной сборки
 bool UTfClassifier::ATfBuild()
 {
-    BuildDone=true;
-    NumClasses=TfObject.GetNumClasses();
+    //NumClasses=TfObject->GetNumClasses();
     return true;
 }
 
@@ -149,32 +153,32 @@ bool UTfClassifier::ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confid
     //auto begin = std::chrono::steady_clock::now();
 
     //Обрабатываем иображение для входа
-    if(!TfObject.SetInputDataCvMeth(bmp))
+    if(!TfObject->SetInputDataCvMeth(bmp))
     {
-        DebugString=TfObject.GetDebugStr();
-        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
-        return true;
+        DebugString=TfObject->GetDebugStr();
+       // LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        return false;
     }
 
     //Запуск рассчёта нейросети
-    if(!TfObject.Run())
+    if(!TfObject->Run())
     {
-        DebugString=TfObject.GetDebugStr();
-        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
-        return true;
+        DebugString=TfObject->GetDebugStr();
+       // LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        return false;
     }
 
     std::vector<float> result;
 
-    for(int i=0; i<TfObject.GetOutput()[0].dim_size(1); i++)
+    for(int i=0; i<TfObject->GetOutput()[0].dim_size(1); i++)
     {
-        result.push_back(TfObject.GetOutput()[0].matrix<float>()(0,i));
+        result.push_back(TfObject->GetOutput()[0].matrix<float>()(0,i));
     }
 
     if(result.size()!=NumClasses)
     {
         DebugString="Number of classes is wrong";
-        return true;
+        return false;
     }
 
     int max_id = -1;
