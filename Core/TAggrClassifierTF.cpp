@@ -69,7 +69,7 @@ bool TAggrClassifierTF::ADefault2(void)
 {
  ResizeX = 96;
  ResizeY = 96;
- ResizeType = 1;
+ ResizeType = 3;
  NumClasses=4;
 
  UBitmapClassifier.Default();

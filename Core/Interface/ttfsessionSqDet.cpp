@@ -143,7 +143,7 @@ bool TTfSessionSqDet::CreatePostProcGraph()
 
    //Определение параметров сессии
    tensorflow::SessionOptions opts;
-   opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(GpuFraction);
+   opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(0.6);
    opts.config.mutable_gpu_options()->set_allow_growth(true);
 
     //Инициализация сессии

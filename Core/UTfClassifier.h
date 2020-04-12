@@ -42,6 +42,8 @@ ULProperty<double,UTfClassifier, ptPubState> ClassificationTime;
 /// Количество классов объектов (какой размер будет у вектора)
 ULProperty<int,UTfClassifier, ptPubParameter> NumClasses;
 
+TTF::TTfSession TfClassifier;
+
 public: // Методы
 // --------------------------
 // Конструкторы и деструкторы

@@ -104,6 +104,7 @@ virtual bool ATfBuild(void)=0;
 virtual bool AReset(void);
 virtual bool ATfReset(void)=0;
 
+
 // Выполняет расчет этого объекта
 virtual bool ACalculate(void);
 virtual bool ATfCalculate(void)=0;

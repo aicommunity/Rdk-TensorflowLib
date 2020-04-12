@@ -21,12 +21,12 @@ UTfDetector::UTfDetector(void):
     OutputClasses("OutputClasses",this),
     OutputReliability("OutputReliability",this)
 {
-    TfObject = new TTF::TTfSession;
+    TfObject = &TfDetector;
 }
 
 UTfDetector::~UTfDetector(void)
 {
-    delete TfObject;
+
 }
 // --------------------------
 

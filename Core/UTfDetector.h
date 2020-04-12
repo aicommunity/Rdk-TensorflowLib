@@ -39,7 +39,7 @@ UPropertyOutputData<MDMatrix<int>, UTfDetector, ptOutput | ptPubState> OutputCla
 UPropertyOutputData<MDMatrix<double>, UTfDetector, ptOutput | ptPubState> OutputReliability;
 
 protected: // Переменные состояния
-
+TTF::TTfSession TfDetector;
 UGraphics Graph;
 public: // Методы
 // --------------------------

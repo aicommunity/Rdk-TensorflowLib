@@ -1,6 +1,6 @@
 #include <QCoreApplication>
 #include <QDir>
-
+#include <QString>
 #include <fstream>
 #include <iostream>
 //#include <sys/time.h>
@@ -24,6 +24,8 @@ using namespace TTF;
 
 int CheckAccuracy(std::string input_model,std::vector<std::string> outputs,std::string inputs);
 
+int CheckAccuracyNew(std::string input_model,std::vector<std::string> input_and_output,std::vector<std::string> paths);
+
 int SimpleInception();
 
 int DetectFrames(QString str, std::string path, std::string savefolder);
@@ -37,7 +39,7 @@ int main(int argc, char *argv[])
 
     //DebugSqueezeDet("/home/vladburin/TF/trash/CameraImgs/images01010.jpeg");
 
-    SimpleInception();
+
     /*
     //eleron
     CheckAccuracy("/home/user/networks_for_test/Tested/eleron-inception3-12-0.91803.pb",{{"predictions/Softmax"},},"input_1");
@@ -58,6 +60,9 @@ int main(int argc, char *argv[])
     CheckTime << ClassificationTime << "\n";
     CheckTime.close();
 */
+
+
+    CheckAccuracyNew("/home/vladburin/ABZnetwork/Eleron_new.pb",{"vgg16_input","dense_2/Softmax"},{"/home/vladburin/TF/trash/eleron_val/background","/home/vladburin/TF/trash/eleron_val/cars","/home/vladburin/TF/trash/eleron_val/peoples"});
 
     return a.exec();
 
@@ -132,7 +137,123 @@ int DebugSqueezeDet(std::string img_path)
     return 0;
 }
 
+int CheckAccuracyNew(std::string input_model,std::vector<std::string> input_and_output,std::vector<std::string> paths)
+{
+    std::vector<int> Falses(paths.size(),0);
+    std::vector<int> Predictions(paths.size(),0);
 
+    TTfSession FirstExample;
+
+    StopIfBad(FirstExample.SetGraphParams({input_and_output[1]},input_and_output[0]));
+
+    StopIfBad(FirstExample.InitModel(input_model,0.9,true));
+
+    StopIfBad(FirstExample.SetImgParams({0,0,0},255,false));
+
+    double ClassificationTime;
+    std::vector<double> TimeArray;
+
+    for (int k=0;k<paths.size();k++)
+    {
+        std::vector<std::string> Images;
+
+        QDir dir(QString::fromStdString(paths.at(k)));
+        dir.setFilter(QDir::Files);
+        dir.setSorting(QDir::Name);
+        QFileInfoList list = dir.entryInfoList();
+
+        for (int i = 0; i < list.size(); ++i)
+        {
+            QFileInfo fileInfo = list.at(i);
+            QString line = fileInfo.fileName();
+            Images.push_back(std::string(dir.path().toUtf8().constData())+"/"+ std::string(line.toUtf8().constData()));
+        }
+
+
+        for(int j=0;j<Images.size();j++)
+        {
+            cv::Mat img=cv::imread(Images[j],1);
+
+            ClassificationTime=0.0;
+            clock_t start_frame = clock();
+
+            StopIfBad(FirstExample.SetInputDataCvMeth(img));
+
+            StopIfBad(FirstExample.Run());
+
+            clock_t end_frame = clock();
+            ClassificationTime = (double)(end_frame - start_frame) / CLOCKS_PER_SEC;
+            TimeArray.push_back(ClassificationTime);
+
+            auto Result1 = FirstExample.GetOutput()[0];
+
+            int max_id = -1;
+            double max_conf = -100;
+            //std::cout << Result1.matrix<float>()<< std::endl;
+            for(int g=0; g<FirstExample.GetOutput()[0].dim_size(1); g++)
+            {
+
+                if(Result1.matrix<float>()(0,g)>max_conf)
+                {
+                    max_conf = Result1.matrix<float>()(0,g);
+                    max_id = g;
+                }
+            }
+            if(max_id!=k)
+            {
+                Falses.at(k)++;
+            }
+
+        }
+        Predictions.at(k)=Images.size();
+    }
+
+    std::cout << input_model << std::endl;
+
+    for(int h=0;h<paths.size();h++)
+    {
+        std::cout << h<<":\t" << Predictions[h] <<std::endl;
+        std::cout << "False:\t" << Falses[h] <<std::endl << "\n";
+    }
+
+    int NumPictures=0;
+    for(std::vector<int>::iterator it = Predictions.begin(); it != Predictions.end(); ++it)
+        NumPictures += *it;
+
+    int NumFalses=0;
+    for(std::vector<int>::iterator it = Falses.begin(); it != Falses.end(); ++it)
+        NumFalses += *it;
+
+    double accuracy=double(NumPictures-NumFalses)/NumPictures;
+
+    std::cout << "All:\t" << NumPictures <<std::endl;
+    std::cout << "AllFalse:\t" << NumFalses <<std::endl;
+    std::cout << "Accuracy:\t" << accuracy <<std::endl;
+
+
+    double avarage=0;
+    for (int i=0;i<TimeArray.size();i++)
+    {
+        avarage+=TimeArray[i];
+    }
+
+    avarage=avarage/TimeArray.size();
+    std::cout << "Average:\t" << avarage <<std::endl;
+
+    double temp=0;
+    for (int i=0;i<TimeArray.size();i++)
+    {
+        temp+=pow((TimeArray[i]-avarage),2);
+    }
+
+    temp=temp/TimeArray.size();
+
+    temp=sqrt(temp);
+    std::cout <<"Standard Dev:\t"<< temp <<std::endl;
+
+
+
+}
 
 int CheckAccuracy(std::string input_model,std::vector<std::string> outputs,std::string inputs)
 {

@@ -16,6 +16,7 @@ public: // Коммуникационные данные
 
 /// Исходное изображение
 UPropertyInputData<MDMatrix<int>,TAggrClassifierTF> InputClassifierResults;
+
 /// Входной массив с уверенностями всех обработанных изображений
 UPropertyInputData<MDMatrix<double>, TAggrClassifierTF> InputConfidences;
 

@@ -138,12 +138,16 @@ bool UTfComponent::ABuild(void)
     }
 
     */
+
+
     if(!ATfBuild())
     {
         DebugString=TfObject->GetDebugStr();
+        BuildDone=false;
         //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
+
 
     //Задание параметров модели нейросети
     if(!TfObject->SetGraphParams(OutputNodeName,InputNodeName))
@@ -153,7 +157,15 @@ bool UTfComponent::ABuild(void)
         //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
         return true;
     }
-    std::string RealPath=GetEnvironment()->GetCurrentDataDir()+std::string(PbModelPath);
+
+    std::string RealPath=PbModelPath;
+    if(GetEnvironment())
+    {
+        RealPath=GetEnvironment()->GetCurrentDataDir()+std::string(PbModelPath);
+    }
+
+
+
     //Загрузка модели нейросети
     //GetEnvironment()->GetCurrentDataDir()+
     if(!TfObject->InitModel(RealPath,GpuFraction))
@@ -200,6 +212,7 @@ bool UTfComponent::ACalculate(void)
    if(!BuildDone)
    {
        DebugString=TfObject->GetDebugStr();
+       Ready=false;
        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
        return true;
    }
@@ -208,6 +221,7 @@ bool UTfComponent::ACalculate(void)
    return ATfCalculate();
 }
 // --------------------------
+
 
 
 }

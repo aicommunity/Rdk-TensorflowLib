@@ -79,12 +79,19 @@ bool UTfSqDetector::ATfReset()
 // в случае успешной сборки
 bool UTfSqDetector::ATfBuild()
 {
-    if(!TfDetector.SetConfigPath(ConfigPath))
+    std::string RealPath_1=ConfigPath;
+    if(GetEnvironment())
+    {
+        RealPath_1=GetEnvironment()->GetCurrentDataDir()+std::string(ConfigPath);
+    }
+
+    if(!TfDetector.SetConfigPath(RealPath_1))
     {
         return false;
     }
     return true;
 }
+
 
 // Выполняет расчет этого объекта
 bool UTfSqDetector::ATfCalculate(void)
@@ -194,6 +201,9 @@ bool UTfSqDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatri
     }
     return true;
 }
+
+
+
 
 }
 

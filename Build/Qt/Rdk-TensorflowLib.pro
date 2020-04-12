@@ -61,6 +61,7 @@ HEADERS += \
     ../../Core/UTfDetector.h  \
     ../../Core/UTfSqDetector.h  \
     ../../Core/TAggrClassifierTF.h  \
+    ../../Core/UTrajectoriesSaver.h
 
 
 SOURCES += \
@@ -72,7 +73,7 @@ SOURCES += \
     ../../Core/UTfDetector.cpp  \
     ../../Core/UTfSqDetector.cpp  \
     ../../Core/TAggrClassifierTF.cpp  \
-
+    ../../Core/UTrajectoriesSaver.cpp
 
 #including opencv
 OPENCV_LIBS_LIST = -lopencv_core \

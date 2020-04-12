@@ -78,9 +78,9 @@ bool TTfSession::InitSession(const double &gpu_fraction)
     GpuFraction=gpu_fraction;
     //Определение параметров сессии
     tensorflow::SessionOptions opts;
-    opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(gpu_fraction);
+    //opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(gpu_fraction);
     opts.config.mutable_gpu_options()->set_allow_growth(true);
-
+    opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(0.6);
 
     //Инициализация сессии
     Status = tensorflow::NewSession(opts, &Session);
@@ -318,7 +318,7 @@ bool TTfSession::CreateGraphForTransform()
     }
     //Инициализация сессии преобразования
     tensorflow::SessionOptions opts;
-    opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(GpuFraction);
+    opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(0.6);
     opts.config.mutable_gpu_options()->set_allow_growth(true);
 
     Status = tensorflow::NewSession(opts, &SessionForTransform);

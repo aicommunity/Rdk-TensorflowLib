@@ -24,12 +24,12 @@ UTfClassifier::UTfClassifier(void):
     ClassificationTime("ClassificationTime",this),
     NumClasses("NumClasses",this,&UTfClassifier::SetNumClasses)
 {
-    TfObject = new TTF::TTfSession;
+    TfObject = &TfClassifier;
 }
 
 UTfClassifier::~UTfClassifier(void)
 {
-    delete TfObject;
+
 }
 // --------------------------
 
@@ -91,8 +91,6 @@ bool UTfClassifier::ATfBuild()
 // Выполняет расчет этого объекта
 bool UTfClassifier::ATfCalculate(void)
 {
-
-
 
     if(InputImages.IsConnected() && InputImages->size()>0)
     {
