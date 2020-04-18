@@ -11,7 +11,7 @@ using namespace RTV;
 // Конструкторы и деструкторы
 // --------------------------
 UTrajectoriesSaver::UTrajectoriesSaver(void)
-    : OnlyDefined("OnlyDefined", this, &UTrajectoriesSaver::SetOnlyDefined),
+    : OnlyClassified("OnlyDefined", this),
       PAllAggregates("PAllAggregates",this),
       PTrajectories("PTrajectories",this),
       InputImage("InputImage",this)
@@ -29,11 +29,6 @@ UTrajectoriesSaver::~UTrajectoriesSaver(void)
 // ---------------------
 // ---------------------
 
-bool UTrajectoriesSaver::SetOnlyDefined(const bool &value)
-{
-    Ready=false;
-    return true;
-}
 
 
 
@@ -56,7 +51,7 @@ UTrajectoriesSaver* UTrajectoriesSaver::New(void)
 // Восстановление настроек по умолчанию и сброс процесса счета
 bool UTrajectoriesSaver::ADefault(void)
 {
-    OnlyDefined = false;
+    OnlyClassified = false;
     return true;
 }
 
@@ -78,9 +73,7 @@ bool UTrajectoriesSaver::AReset(void)
 // Выполняет расчет этого объекта
 bool UTrajectoriesSaver::ACalculate(void)
 {
-    //TODO сделать сохранение только классифицированных при флаге OnlyDefined
     UBitmap bmp;
-    bool nothing = true;
     for(size_t i=0;i<PAllAggregates->size();i++)
     {
      TAggr &aggr=(*PAllAggregates)[i];
@@ -98,8 +91,8 @@ bool UTrajectoriesSaver::ACalculate(void)
        continue;
      }
 
-     if(OnlyDefined)
-        if(aggr.ObjectClass<0)
+     if(OnlyClassified)
+        if(aggr.ObjectClass<=0)
             continue;
 
 
@@ -143,45 +136,13 @@ bool UTrajectoriesSaver::ACalculate(void)
              jpge::compress_image_to_jpeg_file(image_name.c_str(), TempBitmap.GetWidth(), TempBitmap.GetHeight(), 3,
                                             TempBitmap.GetData(),param);
              //index+=1;
-             nothing = false;
+
          }
      }
 
     }
 
 
-    //Если пусто?
-    if(nothing)
-    {
-        static int index= 0;
-        std::string traj_path = Environment->GetCurrentDataDir()+"trajectory_images/";
-        //Создаем директорию для всех траекторий
-        if(RDK::CreateNewDirectory(traj_path.c_str())==0)
-        {
-            //Создаем директорию для пустых кадров
-            std::string trajectory_dir = traj_path+"0.empty"+"/"; //(*AllAggregates)[i].AgTrjIndx)
-
-            if(RDK::CreateNewDirectory(trajectory_dir.c_str())==0)
-            {
-                //Формируем имя картинки
-                std::string image_name = trajectory_dir+sntoa(index)+".jpg";
-
-                RDK::UBitmap TempBitmap;
-                InputImage->ConvertTo(TempBitmap);
-                TempBitmap.SwapRGBChannels();
-                //TempBitmap.ReflectionX();
-
-                jpge::params param;
-                param.m_quality=50;
-
-                //save_path<<"/"<<index<<"_"<<aggr.AgID<<"_"<<iiii<<"_"<<aggr.ObjectClassQuality<<".jpg";
-                //   jpge::jpeg_encoder jpeg_e;
-                jpge::compress_image_to_jpeg_file(image_name.c_str(), TempBitmap.GetWidth(), TempBitmap.GetHeight(), 3,
-                                               TempBitmap.GetData(),param);
-                index+=1;
-            }
-        }
-    }
 
 
 

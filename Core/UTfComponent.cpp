@@ -117,34 +117,14 @@ bool UTfComponent::ADefault(void)
 // в случае успешной сборки
 bool UTfComponent::ABuild(void)
 {
-    /*
-    if(!TfObject.UnInit())
-    {
-        DebugString=TfObject.GetDebugStr();
-        BuildDone=false;
-        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
-        return true;
-    }
-    */
-    /*
-    if(BuildDone)
-    {
-        if(!TfObject.UnInit())
-        {
-            DebugString=TfObject.GetDebugStr();
-            BuildDone=false;
-            return true;
-        }
-    }
 
-    */
 
 
     if(!ATfBuild())
     {
         DebugString=TfObject->GetDebugStr();
         BuildDone=false;
-        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return true;
     }
 
@@ -154,7 +134,7 @@ bool UTfComponent::ABuild(void)
     {
         DebugString=TfObject->GetDebugStr();
         BuildDone=false;
-        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return true;
     }
 
@@ -172,7 +152,7 @@ bool UTfComponent::ABuild(void)
     {
         DebugString=TfObject->GetDebugStr();
         BuildDone=false;
-        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
+         LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return true;
     }
 
@@ -181,7 +161,7 @@ bool UTfComponent::ABuild(void)
     {
         DebugString=TfObject->GetDebugStr();
         BuildDone=false;
-        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+         LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return true;
     }
 
@@ -213,7 +193,7 @@ bool UTfComponent::ACalculate(void)
    {
        DebugString=TfObject->GetDebugStr();
        Ready=false;
-       //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+       LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
        return true;
    }
 

@@ -155,7 +155,7 @@ bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<
     if(!TfObject->SetInputDataCvMeth(bmp))
     {
         DebugString=TfObject->GetDebugStr();
-        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return false;
     }
 
@@ -163,8 +163,7 @@ bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<
     if(!TfObject->Run())
     {
         DebugString=TfObject->GetDebugStr();
-
-        //LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return false;
     }
     int num_detections;

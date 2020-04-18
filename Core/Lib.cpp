@@ -28,7 +28,7 @@ void UTensorflowLib::CreateClassSamples(RDK::UStorage *storage)
  UploadClass<UTfClassifier>("UTfClassifier", "ClassifierTF");
  UploadClass<UTfDetector>("UTfDetector", "DetectorTF");
  UploadClass<UTfSqDetector>("UTfSqDetector", "DetectorTFSq");
- UploadClass<TAggrClassifierTF>("TAggrClassifierTF","AggrClassifierTF");
+ //UploadClass<TAggrClassifierTF>("TAggrClassifierTF","AggrClassifierTF");
  UploadClass<UTrajectoriesSaver>("UTrajectoriesSaver","TrajectoriesSaver");
 
 }

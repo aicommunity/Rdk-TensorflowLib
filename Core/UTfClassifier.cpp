@@ -109,7 +109,7 @@ bool UTfClassifier::ATfCalculate(void)
             {
                 for(int k=0; k<output_confidences.GetSize(); k++)
                 {
-                   (*OutputConfidences)(i, k) = output_confidences(k);
+                    (*OutputConfidences)(i, k) = output_confidences(k);
                 }
                 (*OutputClasses)[i] = (is_classified)?class_id:CLASS_LOWQUAL;
             }
@@ -154,7 +154,7 @@ bool UTfClassifier::ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confid
     if(!TfObject->SetInputDataCvMeth(bmp))
     {
         DebugString=TfObject->GetDebugStr();
-       // LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return false;
     }
 
@@ -162,7 +162,7 @@ bool UTfClassifier::ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confid
     if(!TfObject->Run())
     {
         DebugString=TfObject->GetDebugStr();
-       // LogMessageEx(RDK_EX_WARNING,__FUNCTION__,DebugString);
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return false;
     }
 

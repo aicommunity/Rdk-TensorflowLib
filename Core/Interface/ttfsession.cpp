@@ -1,5 +1,7 @@
 #include "ttfsession.h"
 
+#define USE_RDK 1
+
 namespace  TTF
 {
 
@@ -338,6 +340,7 @@ bool TTfSession::CreateGraphForTransform()
     return true;
 }
 
+#if USE_RDK == 1
 bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
 {
     //Преобразование UbitMap изображения в формат RGB
@@ -426,6 +429,12 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
 
 bool TTfSession::SetInputDataCvMeth(RDK::UBitmap& image)
 {
+    if(image.GetData()==nullptr)
+    {
+        ErCode = TfErrorCode::COPY_DATA_FROM_NULL_PTR;
+        return false;
+    }
+
     cv::Mat imageMat=cv::Mat(image.GetHeight(), image.GetWidth(), CV_8UC3, image.GetData()).clone();
 
     if(!SetInputDataCvMeth(imageMat))
@@ -438,7 +447,7 @@ bool TTfSession::SetInputDataCvMeth(RDK::UBitmap& image)
 
     return true;
 }
-
+#endif
 bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 {
 
@@ -513,7 +522,7 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
 {
 
     //Проверка на определение входных параметров
-    if((Divide)==0.0)
+    if((Divide)==0.0f)
     {
         ErCode = DIVISION_BY_ZERO;
         return false;

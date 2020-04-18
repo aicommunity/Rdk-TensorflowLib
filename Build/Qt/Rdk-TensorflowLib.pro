@@ -60,7 +60,6 @@ HEADERS += \
     ../../Core/UTfClassifier.h  \
     ../../Core/UTfDetector.h  \
     ../../Core/UTfSqDetector.h  \
-    ../../Core/TAggrClassifierTF.h  \
     ../../Core/UTrajectoriesSaver.h
 
 
@@ -72,7 +71,6 @@ SOURCES += \
     ../../Core/UTfClassifier.cpp \
     ../../Core/UTfDetector.cpp  \
     ../../Core/UTfSqDetector.cpp  \
-    ../../Core/TAggrClassifierTF.cpp  \
     ../../Core/UTrajectoriesSaver.cpp
 
 #including opencv

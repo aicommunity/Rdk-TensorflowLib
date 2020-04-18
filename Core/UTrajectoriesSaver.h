@@ -21,7 +21,7 @@ class UTrajectoriesSaver : public RDK::UNet
 protected: // ѕараметры
 
     ///—охран€ть ли только в случае, если класс определен
-    ULProperty<bool, UTrajectoriesSaver, ptPubParameter> OnlyDefined;
+    ULProperty<bool, UTrajectoriesSaver, ptPubParameter> OnlyClassified;
 
 
 protected: // ¬ходы и выходы
@@ -50,8 +50,6 @@ virtual ~UTrajectoriesSaver(void);
 // ---------------------
 // ---------------------
 
-
-bool SetOnlyDefined(const bool &value);
 
 
 // ---------------------
