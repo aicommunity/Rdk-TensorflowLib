@@ -59,8 +59,7 @@ HEADERS += \
     ../../Core/UTfComponent.h  \
     ../../Core/UTfClassifier.h  \
     ../../Core/UTfDetector.h  \
-    ../../Core/UTfSqDetector.h  \
-    ../../Core/UTrajectoriesSaver.h
+    ../../Core/UTfSqDetector.h
 
 
 SOURCES += \
@@ -70,8 +69,7 @@ SOURCES += \
     ../../Core/UTfComponent.cpp \
     ../../Core/UTfClassifier.cpp \
     ../../Core/UTfDetector.cpp  \
-    ../../Core/UTfSqDetector.cpp  \
-    ../../Core/UTrajectoriesSaver.cpp
+    ../../Core/UTfSqDetector.cpp
 
 #including opencv
 OPENCV_LIBS_LIST = -lopencv_core \
