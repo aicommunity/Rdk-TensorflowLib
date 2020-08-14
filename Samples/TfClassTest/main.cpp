@@ -66,21 +66,24 @@ int main(int argc, char *argv[])
 
     //CheckAccuracyNew("/home/vladburin/ABZnetwork/Eleron_new.pb",{"vgg16_input","dense_2/Softmax"},{"/home/vladburin/TF/trash/eleron_val/background","/home/vladburin/TF/trash/eleron_val/cars","/home/vladburin/TF/trash/eleron_val/peoples"});
 
-    cv::Mat img = cv::imread("/home/vladburin/1.TF/pictures/eleron_val/cars/764.jpg");
+    cv::Mat img ;//= cv::imread("/home/vladburin/1.TF/pictures/eleron_val/cars/764.jpg");
 
     TTfSession FirstExample;
 
     StopIfBad(FirstExample.SetGraphParams({"dense_1/Softmax"},"squeezenet_input"));
 
-    StopIfBad(FirstExample.InitModel("/home/vladburin/networks_for_test/C++/SN_abz_3_EPS.pb",0.9,true));
+    StopIfBad(FirstExample.InitModel("/home/user/networks_for_test/C++/SN_abz_3_EPS.pb",0.9,true));
 
     StopIfBad(FirstExample.SetImgParams({0,0,0},255,false));
 
 
-    img = cv::imread("/home/vladburin/1.TF/pictures/pictures/val/peoples/abz_1_4x4_41.jpg");
+    img = cv::imread("/home/user/ImagesAggClass/trajectory_images_abz_1/138/11.jpg");
     StopIfBad(FirstExample.SetInputDataCvMeth(img));
 
     StopIfBad(FirstExample.Run());
+
+
+
 
     auto Result1 = FirstExample.GetOutput()[0];
 

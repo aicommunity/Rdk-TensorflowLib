@@ -1,6 +1,6 @@
 #include "ttfsession.h"
 
-#define USE_RDK 1
+#define USE_RDK 0
 
 namespace  TTF
 {
@@ -483,7 +483,7 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
     image.copyTo(input);
     if(input.channels()>1 && !ImgBgr)
     {
-        cv::cvtColor(image, input, CV_BGR2RGB);
+        cv::cvtColor(image, input, cv::COLOR_BGR2RGB);
     }
 
 
@@ -546,7 +546,7 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     //Перевод из BGR в RGB
     if(ImgChannels>1 && !ImgBgr)
     {
-        cv::cvtColor(image, input, CV_BGR2RGB);
+        cv::cvtColor(image, input, cv::COLOR_BGR2RGB);
     }
 
     //Изменение типа. Не все типы поддерживаются
