@@ -77,7 +77,8 @@ OPENCV_LIBS_LIST = -lopencv_core \
  -lopencv_imgproc \
  -lopencv_videoio \
  -lopencv_imgcodecs \
- -lopencv_video
+ -lopencv_video     \
+ -lopencv_dnn
 
 windows {
  OPENCV_LIBS_VERSION = 345
@@ -99,7 +100,12 @@ contains(DEFINES, RDK_USE_CUDA) {
   return($$returnValue)
  }
 
- INCLUDEPATH += $$(OPENCV3_PATH)/build/include
+
+ contains(DEFINES, OPENCV_4) {
+        INCLUDEPATH += $$(OPENCV4_PATH)/include/opencv4
+    }else{
+        INCLUDEPATH += $$(OPENCV3_PATH)/include
+    }
 
  !contains(QMAKE_TARGET.arch, x86_64) {
  CONFIG(debug){
@@ -117,6 +123,13 @@ contains(DEFINES, RDK_USE_CUDA) {
  }
 }
 } else:unix {
- LIBS += -L$$(OPENCV3_PATH)/lib $$OPENCV_LIBS_LIST
+
+
+contains(DEFINES, OPENCV_4) {
+    LIBS += -L$$(OPENCV4_PATH)/lib $$OPENCV_LIBS_LIST
+    }else{
+    LIBS += -L$$(OPENCV3_PATH)/lib $$OPENCV_LIBS_LIST
+    }
+
 }
 
