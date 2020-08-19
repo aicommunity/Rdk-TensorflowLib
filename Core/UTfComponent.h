@@ -26,7 +26,7 @@ ULProperty<float,UTfComponent> ImgDiv;
 ///¬ычитаемое из данных изображени€ (изображени€)
 ULProperty<std::vector<float>,UTfComponent, ptPubParameter> ImgSub;
 
-///‘лаг отвечающий за тип загружаемой модели (true - pb модель, false - meta+ckpt модель)
+///‘лаг отвечающий за формат используемого изображени€
 ULProperty<bool,UTfComponent, ptPubParameter> UseBGR;
 
 ///ƒол€ использовани€ пам€ти GPU
