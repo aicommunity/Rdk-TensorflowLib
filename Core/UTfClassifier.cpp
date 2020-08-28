@@ -84,7 +84,8 @@ bool UTfClassifier::ATfBuild()
 // Выполняет расчет этого объекта
 bool UTfClassifier::ATfCalculate(void)
 {
-
+    OutputClasses->Resize(0,1);
+    OutputConfidences->Resize(0, NumClasses);
     if(InputImages.IsConnected() && InputImages->size()>0)
     {
         OutputClasses->Assign(InputImages->size(),1, CLASS_UNDEFINED);

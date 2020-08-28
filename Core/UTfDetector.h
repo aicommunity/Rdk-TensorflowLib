@@ -2,45 +2,21 @@
 #define RDK_UTFDETECTOR_H
 
 #include "UTfComponent.h"
-
+#include "../../Rdk-CRLib/Core/UDetectorBase.h"
 namespace RDK {
 
-class UTfDetector: public UTfComponent
+class UTfDetector: public UDetectorBase, public UTfComponent
 {
 protected: // Параметры
 
-///Отвечает за домножение полученных координат на ширину и высоту
-ULProperty<bool,UTfDetector, ptPubParameter> UseRelativeCoords;
 
-///Рисовать или не рисовать отладочные изображения
-ULProperty<bool,UTfDetector, ptPubParameter> UseDebugImage;
 
 protected: // Входы и выходы
 
-/// Входное изображение
-UPropertyInputData<UBitmap, UTfDetector> InputImage;
-
-/// Выходное отладочное изображение
-UPropertyOutputData<UBitmap, UTfDetector> DebugImage;
-
-/// Выходная матрица. Количество строк по числу объектов
-/// Формат матрицы:
-/// Высота по количеству объектов
-/// Ширина 4+1=Left; Top; Right; Bottom; ClassNumber
-UPropertyOutputData<MDMatrix<double>, UTfDetector, ptOutput | ptPubState> OutputObjects;
-
-/// Выходная матрица только прямоугольников с экранными координатами
-UPropertyOutputData<MDMatrix<double>, UTfDetector, ptOutput | ptPubState> OutputRects;
-
-/// Выходная матрица идентификаторов классов
-UPropertyOutputData<MDMatrix<int>, UTfDetector, ptOutput | ptPubState> OutputClasses;
-
-/// Выходная матрица оценок достоверностей
-UPropertyOutputData<MDMatrix<double>, UTfDetector, ptOutput | ptPubState> OutputReliability;
 
 protected: // Переменные состояния
 TTF::TTfSession TfDetector;
-UGraphics Graph;
+
 public: // Методы
 // --------------------------
 // Конструкторы и деструкторы
