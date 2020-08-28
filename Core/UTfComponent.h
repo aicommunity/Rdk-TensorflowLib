@@ -6,7 +6,7 @@
 #include "Interface/ttfsessionSqDet.h"
 namespace RDK {
 
-class UTfComponent:public RDK::UNet
+class UTfComponent: virtual public RDK::UNet
 {
 
 protected: // Параметры

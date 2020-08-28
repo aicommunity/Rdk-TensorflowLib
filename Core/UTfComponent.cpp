@@ -100,7 +100,7 @@ bool UTfComponent::ADefault(void)
 
     OutputNodeName={"",};
 
-    ImgDiv=1;
+    ImgDiv=255;
 
     ImgSub={0.f,0.f,0.f};
 
