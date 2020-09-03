@@ -12,14 +12,6 @@ namespace RDK {
 // Конструкторы и деструкторы
 // --------------------------
 UTfSqDetector::UTfSqDetector(void):
-    InputImage("InputImage",this),
-    UseDebugImage("UseDebugImage",this),
-    UseRelativeCoords("UseRelativeCoords",this),
-    OutputObjects("OutputObjects",this),
-    DebugImage("DebugImage",this),
-    OutputRects("OutputRects",this),
-    OutputClasses("OutputClasses",this),
-    OutputReliability("OutputReliability",this),
     ConfigPath("ConfigPath",this,&UTfSqDetector::SetConfigPath)
 {
     TfObject = &TfDetector;

@@ -2,49 +2,25 @@
 #define RDK_UTSQFDETECTOR_H
 
 #include "UTfComponent.h"
+#include "../../Rdk-CRLib/Core/UDetectorBase.h"
 
 namespace RDK {
 
-class UTfSqDetector: public UTfComponent
+class UTfSqDetector:  public UDetectorBase, public UTfComponent
 {
 protected: // Параметры
 
-///Отвечает за домножение полученных координат на ширину и высоту
-ULProperty<bool,UTfSqDetector, ptPubParameter> UseRelativeCoords;
-
-///Рисовать или не рисовать отладочные изображения
-ULProperty<bool,UTfSqDetector, ptPubParameter> UseDebugImage;
 
 ///Рисовать или не рисовать отладочные изображения
 ULProperty<std::string,UTfSqDetector, ptPubParameter> ConfigPath;
 protected: // Входы и выходы
 
-/// Входное изображение
-UPropertyInputData<UBitmap, UTfSqDetector> InputImage;
 
-/// Выходное отладочное изображение
-UPropertyOutputData<UBitmap, UTfSqDetector> DebugImage;
-
-/// Выходная матрица. Количество строк по числу объектов
-/// Формат матрицы:
-/// Высота по количеству объектов
-/// Ширина 4+1=Left; Top; Right; Bottom; ClassNumber
-UPropertyOutputData<MDMatrix<double>, UTfSqDetector, ptOutput | ptPubState> OutputObjects;
-
-/// Выходная матрица только прямоугольников с экранными координатами
-UPropertyOutputData<MDMatrix<double>, UTfSqDetector, ptOutput | ptPubState> OutputRects;
-
-/// Выходная матрица идентификаторов классов
-UPropertyOutputData<MDMatrix<int>, UTfSqDetector, ptOutput | ptPubState> OutputClasses;
-
-/// Выходная матрица оценок достоверностей
-UPropertyOutputData<MDMatrix<double>, UTfSqDetector, ptOutput | ptPubState> OutputReliability;
 
 protected: // Переменные состояния
 
 TTF::TTfSessionSqDet TfDetector;
 
-UGraphics Graph;
 public: // Методы
 // --------------------------
 // Конструкторы и деструкторы

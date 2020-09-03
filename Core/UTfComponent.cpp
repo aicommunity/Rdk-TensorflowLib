@@ -118,8 +118,6 @@ bool UTfComponent::ADefault(void)
 bool UTfComponent::ABuild(void)
 {
 
-
-
     if(!ATfBuild())
     {
         DebugString=TfObject->GetDebugStr();
