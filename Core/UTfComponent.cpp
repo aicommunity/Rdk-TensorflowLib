@@ -149,7 +149,7 @@ bool UTfComponent::ABuild(void)
     {
         DebugString=TfObject->GetDebugStr();
         BuildDone=false;
-         LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return true;
     }
 
@@ -183,7 +183,7 @@ bool UTfComponent::AReset(void)
 }
 
 // Выполняет расчет этого объекта
-bool UTfComponent::ACalculate(void)
+bool UTfComponent::ABeforeCalculate(void)
 {
    //Если модель собрана с ошибками
    if(!BuildDone)
@@ -195,7 +195,7 @@ bool UTfComponent::ACalculate(void)
    }
 
 
-   return ATfCalculate();
+   return true;
 }
 // --------------------------
 

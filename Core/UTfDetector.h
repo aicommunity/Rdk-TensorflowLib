@@ -58,8 +58,6 @@ virtual bool ATfBuild(void);
 // Сброс процесса счета без потери настроек
 virtual bool ATfReset(void);
 
-// Выполняет расчет этого объекта
-virtual bool ATfCalculate(void);
 // --------------------------
 
 virtual bool Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<int> &output_classes, MDMatrix<double> &reliabilities);

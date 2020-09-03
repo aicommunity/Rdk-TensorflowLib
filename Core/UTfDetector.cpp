@@ -70,80 +70,13 @@ bool UTfDetector::ATfBuild()
     return true;
 }
 
-// Выполняет расчет этого объекта
-bool UTfDetector::ATfCalculate(void)
-{
-    if(!InputImage.IsConnected())
-     return true;
-
-    UBitmap &bmp = *InputImage;
-    if(!Detect(bmp, *OutputRects, *OutputClasses, *OutputReliability))
-        return true;
-
-    OutputObjects->Resize(OutputRects->GetRows(), 6);
-    for(int i=0;i<OutputRects->GetRows();i++)
-    {
-        double wm = (*UseRelativeCoords)?(InputImage->GetWidth()):(1);
-        double hm = (*UseRelativeCoords)?(InputImage->GetHeight()):(1);
-        (*OutputObjects)(i,0) = (int)((*OutputRects)(i,1)*wm);
-        (*OutputObjects)(i,1) = (int)((*OutputRects)(i,0)*hm);
-        (*OutputObjects)(i,2) = (int)((*OutputRects)(i,3)*wm);
-        (*OutputObjects)(i,3) = (int)((*OutputRects)(i,2)*hm);
-        (*OutputObjects)(i,4)=(*OutputReliability)(i,0);
-        (*OutputObjects)(i,5)=(*OutputClasses)(i,0);
-    }
-
-    if(UseDebugImage)
-    {
-        DebugImage->SetColorModel(ubmRGB24,false);
-        InputImage->ConvertTo(*DebugImage);
-
-        Graph.SetCanvas(DebugImage);
-
-        UAFont *class_font=GetFont("Tahoma",20);
-
-        for(int i=0; i<OutputRects->GetRows(); i++)
-        {
-            int xmin, ymin, xmax, ymax;
-
-            xmin = (int)((*OutputObjects)(i,0));
-            ymin = (int)((*OutputObjects)(i,1));
-            xmax = (int)((*OutputObjects)(i,2));
-            ymax = (int)((*OutputObjects)(i,3));
-
-
-
-            double conf = (*OutputReliability)(i,0);
-            int cls = (*OutputClasses)(i,0);
-
-
-  //          if(conf<0.2)
-  //            continue;
-
-            Graph.SetPenColor(0x00FF00);
-            Graph.SetPenWidth(3);
-            Graph.Rect(xmin, ymin, xmax, ymax);
-
-
-
-            std::stringstream ss;
-            ss<<cls<<"["<<conf<<"]";
-
-            if(class_font)
-            {
-                Graph.SetFont(class_font);
-                Graph.Text(ss.str(),xmin, ymax+3);
-            }
-        }
-    }
-
-    return true;
-
-}
 // --------------------------
 
 bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<int> &output_classes, MDMatrix<double> &reliabilities)
 {
+    if(!BuildDone)
+        return false;
+
     if(!TfObject->SetInputDataCvMeth(bmp))
     {
         DebugString=TfObject->GetDebugStr();
@@ -176,10 +109,11 @@ bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<
 
     for(int y=0; y<num_detections; y++)
     {
-        for(int x=0; x<4;x++)
-        {
-            output_rects(y,x)=TfObject->GetOutput()[0].tensor<float,3>()(0,y,x);
-        }
+        output_rects(y,0)=TfObject->GetOutput()[0].tensor<float,3>()(0,y,1);
+        output_rects(y,1)=TfObject->GetOutput()[0].tensor<float,3>()(0,y,0);
+        output_rects(y,2)=TfObject->GetOutput()[0].tensor<float,3>()(0,y,3);
+        output_rects(y,3)=TfObject->GetOutput()[0].tensor<float,3>()(0,y,2);
+
         reliabilities(y,0)=(TfObject->GetOutput()[2].matrix<float>()(0,y));
         output_classes(y,0)=int(TfObject->GetOutput()[1].matrix<float>()(0,y));
     }

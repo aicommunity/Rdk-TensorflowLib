@@ -62,8 +62,7 @@ virtual bool ATfBuild(void);
 // Сброс процесса счета без потери настроек
 virtual bool ATfReset(void);
 
-// Выполняет расчет этого объекта
-virtual bool ATfCalculate(void);
+
 // --------------------------
 /// Обрабатывает одно изображение
 virtual bool ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confidences, double conf_thresh, int &class_id, bool &is_classified);

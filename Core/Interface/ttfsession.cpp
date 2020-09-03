@@ -80,7 +80,7 @@ bool TTfSession::CheckInOutNodes(tensorflow::GraphDef& graph_def)
             }
         }
     }
-    catch (std::exception const& e)
+    catch (std::exception const &e)
     {
         ErCode = TfErrorCode::EXCEPTION;
         ExceptionString=e.what();
@@ -164,9 +164,12 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
         return false;
     }
 
+
     //Первый запуск сети медленный
     //Для того разогрев
-    cv::Mat warmUp(ImgHeight, ImgWidth, CV_MAKETYPE(CV_32F,ImgChannels), cv::Scalar(0,0,0));
+    cv::Mat warmUp(ImgHeight == -1 ? 300 : ImgHeight,
+                   ImgWidth == -1 ? 300 : ImgWidth,
+                   CV_MAKETYPE(CV_32F,ImgChannels), cv::Scalar(0,0,0));
     tensorflow::Tensor NewOne(InputDataType, tensorflow::TensorShape({1,warmUp.rows,warmUp.cols,warmUp.channels()}));
     tensorflow::StringPiece tmp_data = NewOne.tensor_data();
 

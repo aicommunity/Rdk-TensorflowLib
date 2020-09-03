@@ -80,64 +80,12 @@ bool UTfClassifier::ATfBuild()
     return true;
 }
 
-// Выполняет расчет этого объекта
-bool UTfClassifier::ATfCalculate(void)
-{
-    OutputClasses->Resize(0,1);
-    OutputConfidences->Resize(0, NumClasses);
-    if(InputImages.IsConnected() && InputImages->size()>0)
-    {
-        OutputClasses->Assign(InputImages->size(),1, CLASS_UNDEFINED);
-        OutputConfidences->Assign(InputImages->size(), NumClasses,0.0);
-        for(int i=0; i<InputImages->size(); i++)
-        {
-            UBitmap &bmp = (*InputImages)[i];
-
-            MDVector<double> output_confidences;
-            int class_id;
-            bool is_classified;
-            bool classify_res=ClassifyBitmap(bmp, output_confidences, ConfidenceThreshold, class_id, is_classified);
-
-            if(classify_res)
-            {
-                for(int k=0; k<output_confidences.GetSize(); k++)
-                {
-                    (*OutputConfidences)(i, k) = output_confidences(k);
-                }
-                (*OutputClasses)[i] = (is_classified)?class_id:CLASS_LOWQUAL;
-            }
-        }
-    }
-    else
-    {
-        if(InputImage.IsConnected())
-        {
-            OutputClasses->Assign(1,1, CLASS_UNDEFINED);
-            OutputConfidences->Assign(1, NumClasses,0.0);
-            UBitmap &bmp = *InputImage;
-
-            MDVector<double> output_confidences;
-            int class_id;
-            bool is_classified;
-            bool classify_res=ClassifyBitmap(bmp, output_confidences, ConfidenceThreshold, class_id, is_classified);
-
-            for(int k=0; k<output_confidences.GetSize(); k++)
-            {
-                (*OutputConfidences)(0, k) = output_confidences(k);
-            }
-
-            (*OutputClasses)[0] = (is_classified)?class_id:CLASS_LOWQUAL;
-        }
-    }
-
-
-
-    return true;
-}
 // --------------------------
 
 bool UTfClassifier::ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confidences, double conf_thresh, int &class_id, bool &is_classified)
 {
+    if(!BuildDone)
+        return false;
 
     ClassificationTime=0.0;
     clock_t start_frame = clock();
