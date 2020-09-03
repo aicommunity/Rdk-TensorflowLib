@@ -31,7 +31,7 @@ namespace TTF
 {
 
 ///Перечисление кодов ошибок
-enum TfErrorCode{
+enum class TfErrorCode{
     OK,
     BAD_STATUS,
     EMPTY_INPUT_NAME,
@@ -55,7 +55,7 @@ class TTfSession
 protected:
 
     ///Состояние кода ошибки
-    TfErrorCode ErCode=OK;
+    TfErrorCode ErCode = TfErrorCode::OK;
 
     ///Строка для исключений
     std::string ExceptionString;
@@ -125,22 +125,8 @@ protected:
      */
     bool InitSession(const double &gpu_fraction);
 
-    ///Вектор описания ошибок в формате строк
-    const std::vector<std::string> DebugStr={
-        "Everything OK",
-        "",
-        "Set input node name with SetGraphParams",
-        "Input node wasn't found in the Graph",
-        "Empty input tensor",
-        "Division by zero. Set image parameters with SetImgParams",
-        "Set output node name with SetGraphParams",
-        "Some of output nodes wasn't found in the graph",
-        "Number of channels in input doesn't equal to input tensor channel number",
-        "Desired data type are not supported for SetInputDataCvMeth. Use SetInputDataTfMeth",
-        "Try to copy from NULL pointer",
-        "",
-        "Wrong config"
-    };
+    ///Массив описания ошибок в формате строк
+    static const char* DebugStr[];
 
 public:
 

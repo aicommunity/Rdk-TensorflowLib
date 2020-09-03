@@ -17,8 +17,6 @@ ULProperty<bool, UTfClassifier> SaveDebugResults;
 protected: // Входы и выходы
 
 
-UPropertyOutputData<UBitmap,UTfClassifier, ptPubOutput> DebugImage;
-
 protected: // Переменные состояния
 
 TTF::TTfSession TfClassifier;

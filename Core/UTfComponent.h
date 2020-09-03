@@ -45,8 +45,6 @@ ULProperty<int,UTfComponent,ptPubState> ExpectedHeight;
 ULProperty<int,UTfComponent,ptPubState> ExpectedWidth;
 ULProperty<int,UTfComponent,ptPubState> ExpectedChannels;
 
-
-
 ///Флаг, отвечающий за успешную сборку
 bool BuildDone;
 
@@ -62,7 +60,6 @@ virtual ~UTfComponent(void);
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-
 
 bool SetPbModelPath(const std::string &value);
 

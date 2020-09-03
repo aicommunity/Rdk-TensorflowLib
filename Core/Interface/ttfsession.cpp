@@ -5,6 +5,22 @@
 namespace  TTF
 {
 
+const char* TTfSession::DebugStr[]={
+    "Everything OK",
+    "",
+    "Set input node name with SetGraphParams",
+    "Input node wasn't found in the Graph",
+    "Empty input tensor",
+    "Division by zero. Set image parameters with SetImgParams",
+    "Set output node name with SetGraphParams",
+    "Some of output nodes wasn't found in the graph",
+    "Number of channels in input doesn't equal to input tensor channel number",
+    "Desired data type are not supported for SetInputDataCvMeth. Use SetInputDataTfMeth",
+    "Try to copy from NULL pointer",
+    "",
+    "Wrong config"
+};
+
 bool TTfSession::CheckInOutNodes(tensorflow::GraphDef& graph_def)
 {
     try{
@@ -12,13 +28,13 @@ bool TTfSession::CheckInOutNodes(tensorflow::GraphDef& graph_def)
         //Проверки на наличие имени входного и выходного узла
         if(InputName.empty())
         {
-            ErCode=EMPTY_INPUT_NAME;
+            ErCode = TfErrorCode::EMPTY_INPUT_NAME;
             return false;
         }
 
         if(OutputName.empty())
         {
-            ErCode=EMPTY_OUTPUT_NAME;
+            ErCode = TfErrorCode::EMPTY_OUTPUT_NAME;
             return false;
         }
 
@@ -35,7 +51,7 @@ bool TTfSession::CheckInOutNodes(tensorflow::GraphDef& graph_def)
             //Если узел не был найден
             if(i==(graph_def.node_size()-1))
             {
-                ErCode = INPUT_NODE_DOESNT_EXIST_IN_GRAPH;
+                ErCode = TfErrorCode::INPUT_NODE_DOESNT_EXIST_IN_GRAPH;
                 return false;
             }
         }
@@ -58,7 +74,7 @@ bool TTfSession::CheckInOutNodes(tensorflow::GraphDef& graph_def)
                 }
                 if(i==(graph_def.node_size()-1))
                 {
-                    ErCode = OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH;
+                    ErCode = TfErrorCode::OUTPUT_NODE_DOESNT_EXIST_IN_GRAPH;
                     return false;
                 }
             }
@@ -66,12 +82,12 @@ bool TTfSession::CheckInOutNodes(tensorflow::GraphDef& graph_def)
     }
     catch (std::exception const& e)
     {
-        ErCode=EXCEPTION;
+        ErCode = TfErrorCode::EXCEPTION;
         ExceptionString=e.what();
         return false;
     }
 
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 }
 
@@ -175,7 +191,7 @@ bool TTfSession::InitModel(const std::string &file_name, const double &gpu_fract
         NumberOfClasses=this->GetOutput()[0].dim_size(1);
     }
     */
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 }
 
@@ -226,12 +242,12 @@ bool TTfSession::SetGraphParams(const std::vector<std::string> &output_name, con
     //Проверки на наличие имени входного и выходного узла
     if(input_name.empty())
     {
-        ErCode=EMPTY_INPUT_NAME;
+        ErCode = TfErrorCode::EMPTY_INPUT_NAME;
         return false;
     }
     if(output_name.empty())
     {
-        ErCode=EMPTY_OUTPUT_NAME;
+        ErCode = TfErrorCode::EMPTY_OUTPUT_NAME;
         return false;
     }
 
@@ -239,7 +255,7 @@ bool TTfSession::SetGraphParams(const std::vector<std::string> &output_name, con
     OutputName = output_name;
     InputName = input_name;
 
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 }
 
@@ -248,18 +264,18 @@ bool TTfSession::SetInputTensor(const tensorflow::Tensor &input_tensor)
    //Проверка на наличие названия у тензора
    if(InputName.empty())
    {
-       ErCode = EMPTY_INPUT_NAME;
+       ErCode = TfErrorCode::EMPTY_INPUT_NAME;
        return false;
    }
    //Проверка на наличие элементов в тензоре
    if(!input_tensor.NumElements())
    {
-       ErCode = EMPTY_INPUT_TENSOR;
+       ErCode = TfErrorCode::EMPTY_INPUT_TENSOR;
        return false;
    }
 
    Input = { {InputName, input_tensor},};
-   ErCode=OK;
+   ErCode = TfErrorCode::OK;
    return true;
 }
 
@@ -268,7 +284,7 @@ bool TTfSession::SetImgParams(const std::vector<float> & sub, const float & div,
     //Проверка на деление на ноль
     if(!int(div))
     {
-        ErCode = DIVISION_BY_ZERO;
+        ErCode = TfErrorCode::DIVISION_BY_ZERO;
         return false;
     }
 
@@ -280,7 +296,7 @@ bool TTfSession::SetImgParams(const std::vector<float> & sub, const float & div,
     Divide = div;
     Substract = sub;
 
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 }
 
@@ -350,14 +366,14 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
 
     if(ImgChannels!=input.GetPixelByteLength())
     {
-        ErCode = WRONG_IMAGE_CHANNELS_NUMBER;
+        ErCode = TfErrorCode::WRONG_IMAGE_CHANNELS_NUMBER;
         return false;
     }
 
     //Проверка на определение входных параметров
     if((Divide)==0.0f)
     {
-        ErCode = DIVISION_BY_ZERO;
+        ErCode = TfErrorCode::DIVISION_BY_ZERO;
         return false;
     }
 
@@ -423,7 +439,7 @@ bool TTfSession::SetInputDataTfMeth(RDK::UBitmap& image)
 
     OutputForTransform.clear();
 
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 }
 
@@ -442,7 +458,7 @@ bool TTfSession::SetInputDataCvMeth(RDK::UBitmap& image)
         return false;
     }
 
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
 
 
     return true;
@@ -455,7 +471,7 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
     //Проверка на определение входных параметров
     if((Divide)==0.0f)
     {
-        ErCode = DIVISION_BY_ZERO;
+        ErCode = TfErrorCode::DIVISION_BY_ZERO;
         return false;
     }
 
@@ -510,7 +526,7 @@ bool TTfSession::SetInputDataTfMeth(cv::Mat& image)
 
     OutputForTransform.clear();
 
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
 
 
     return true;
@@ -524,14 +540,14 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     //Проверка на определение входных параметров
     if((Divide)==0.0f)
     {
-        ErCode = DIVISION_BY_ZERO;
+        ErCode = TfErrorCode::DIVISION_BY_ZERO;
         return false;
     }
 
     //Проверка на равенство кол-ва каналов входного узла и изображения формата cv::Mat
     if(ImgChannels!=image.channels())
     {
-        ErCode = WRONG_IMAGE_CHANNELS_NUMBER;
+        ErCode = TfErrorCode::WRONG_IMAGE_CHANNELS_NUMBER;
         return false;
     }
 
@@ -560,7 +576,7 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     }
     else
     {
-        ErCode=TYPE_UNSOPPORTED_FOR_CV_METH;
+        ErCode = TfErrorCode::TYPE_UNSOPPORTED_FOR_CV_METH;
         return false;
     }   
 
@@ -597,7 +613,7 @@ bool TTfSession::SetInputDataCvMeth(cv::Mat& image)
     }
 
 
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
 
 
     return true;
@@ -608,13 +624,13 @@ bool TTfSession::Run(void)
     //Проверка на наличие входного тензора
     if(Input.empty())
     {
-        ErCode = EMPTY_INPUT_TENSOR;
+        ErCode = TfErrorCode::EMPTY_INPUT_TENSOR;
         return false;
     }
     //Проверка на наличие имени входного узла
     if(OutputName.empty())
     {
-        ErCode = EMPTY_OUTPUT_NAME;
+        ErCode = TfErrorCode::EMPTY_OUTPUT_NAME;
         return false;
     }
 
@@ -626,7 +642,7 @@ bool TTfSession::Run(void)
         return false;
     }
 
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 }
 
@@ -652,16 +668,16 @@ std::vector<int> TTfSession::GetImgParams(void)
 
 const std::string TTfSession::GetDebugStr(void)
 {
-    if(ErCode==BAD_STATUS)
+    if(ErCode == TfErrorCode::BAD_STATUS)
     {
         return Status.ToString();
     }
 
-    if(ErCode==EXCEPTION)
+    if(ErCode == TfErrorCode::EXCEPTION)
     {
         return ExceptionString;
     }
-    return DebugStr[ErCode];
+    return DebugStr[int(ErCode)];
 }
 
 int TTfSession::GetNumClasses()

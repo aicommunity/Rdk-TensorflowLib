@@ -14,8 +14,7 @@ namespace RDK {
 // Конструкторы и деструкторы
 // --------------------------
 UTfClassifier::UTfClassifier(void):
-    SaveDebugResults("SaveDebugResults", this),
-    DebugImage("DebugImage",this)
+    SaveDebugResults("SaveDebugResults", this)
 {
     TfObject = &TfClassifier;
 }

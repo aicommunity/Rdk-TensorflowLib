@@ -126,7 +126,6 @@ bool UTfComponent::ABuild(void)
         return true;
     }
 
-
     //Задание параметров модели нейросети
     if(!TfObject->SetGraphParams(OutputNodeName,InputNodeName))
     {
