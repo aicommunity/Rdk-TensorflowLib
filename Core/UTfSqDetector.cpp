@@ -122,11 +122,16 @@ bool UTfSqDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatri
 
     for(int y=0; y<num_detections; y++)
     {
+        // SqueezeDet находит положение на входном изображении фикс. размера
+        // поэтому надо масштабировать исходя из реального входного изображения
         //Xmin Ymin Xmax Ymax
-        output_rects(y,0)=TfObject->GetOutput()[0].matrix<float>()(y,1);
-        output_rects(y,1)=TfObject->GetOutput()[0].matrix<float>()(y,0);
-        output_rects(y,2)=TfObject->GetOutput()[0].matrix<float>()(y,3);
-        output_rects(y,3)=TfObject->GetOutput()[0].matrix<float>()(y,2);
+        double wm = double(InputImage->GetWidth()) / double(ExpectedWidth);
+        double hm = double(InputImage->GetHeight())/ double(ExpectedHeight);
+
+        output_rects(y,0)=TfObject->GetOutput()[0].matrix<float>()(y,1)*wm;
+        output_rects(y,1)=TfObject->GetOutput()[0].matrix<float>()(y,0)*hm;
+        output_rects(y,2)=TfObject->GetOutput()[0].matrix<float>()(y,3)*wm;
+        output_rects(y,3)=TfObject->GetOutput()[0].matrix<float>()(y,2)*hm;
 
         reliabilities(y,0)=(TfObject->GetOutput()[2].tensor<float,1>()(y));
         output_classes(y,0)=int(TfObject->GetOutput()[1].tensor<long long int,1>()(y));
