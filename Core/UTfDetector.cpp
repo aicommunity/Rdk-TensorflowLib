@@ -75,7 +75,12 @@ bool UTfDetector::ATfBuild()
 bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<int> &output_classes, MDMatrix<double> &reliabilities)
 {
     if(!BuildDone)
+    {
+        DebugString=TfObject->GetDebugStr();
+        Ready=false;
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return false;
+    }
 
     if(!TfObject->SetInputDataCvMeth(bmp))
     {
@@ -109,6 +114,7 @@ bool UTfDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<
 
     for(int y=0; y<num_detections; y++)
     {
+        //Xmin Ymin Xmax Ymax
         output_rects(y,0)=TfObject->GetOutput()[0].tensor<float,3>()(0,y,1);
         output_rects(y,1)=TfObject->GetOutput()[0].tensor<float,3>()(0,y,0);
         output_rects(y,2)=TfObject->GetOutput()[0].tensor<float,3>()(0,y,3);
