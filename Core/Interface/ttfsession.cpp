@@ -1,6 +1,6 @@
 #include "ttfsession.h"
 
-#define USE_RDK 0
+#define USE_RDK 1
 
 namespace  TTF
 {
