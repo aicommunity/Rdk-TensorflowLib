@@ -100,7 +100,7 @@ bool UTfComponent::ADefault(void)
 
     OutputNodeName={"",};
 
-    ImgDiv=1;
+    ImgDiv=255;
 
     ImgSub={0.f,0.f,0.f};
 
@@ -118,8 +118,6 @@ bool UTfComponent::ADefault(void)
 bool UTfComponent::ABuild(void)
 {
 
-
-
     if(!ATfBuild())
     {
         DebugString=TfObject->GetDebugStr();
@@ -127,7 +125,6 @@ bool UTfComponent::ABuild(void)
         LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return true;
     }
-
 
     //Задание параметров модели нейросети
     if(!TfObject->SetGraphParams(OutputNodeName,InputNodeName))
@@ -152,7 +149,7 @@ bool UTfComponent::ABuild(void)
     {
         DebugString=TfObject->GetDebugStr();
         BuildDone=false;
-         LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
         return true;
     }
 
@@ -186,7 +183,7 @@ bool UTfComponent::AReset(void)
 }
 
 // Выполняет расчет этого объекта
-bool UTfComponent::ACalculate(void)
+bool UTfComponent::ABeforeCalculate(void)
 {
    //Если модель собрана с ошибками
    if(!BuildDone)
@@ -198,7 +195,7 @@ bool UTfComponent::ACalculate(void)
    }
 
 
-   return ATfCalculate();
+   return true;
 }
 // --------------------------
 

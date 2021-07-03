@@ -6,7 +6,7 @@
 #include "Interface/ttfsessionSqDet.h"
 namespace RDK {
 
-class UTfComponent:public RDK::UNet
+class UTfComponent: virtual public RDK::UNet
 {
 
 protected: // Параметры
@@ -45,8 +45,6 @@ ULProperty<int,UTfComponent,ptPubState> ExpectedHeight;
 ULProperty<int,UTfComponent,ptPubState> ExpectedWidth;
 ULProperty<int,UTfComponent,ptPubState> ExpectedChannels;
 
-
-
 ///Флаг, отвечающий за успешную сборку
 bool BuildDone;
 
@@ -62,7 +60,6 @@ virtual ~UTfComponent(void);
 // Методы управления параметрами
 // ---------------------
 // ---------------------
-
 
 bool SetPbModelPath(const std::string &value);
 
@@ -106,8 +103,7 @@ virtual bool ATfReset(void)=0;
 
 
 // Выполняет расчет этого объекта
-virtual bool ACalculate(void);
-virtual bool ATfCalculate(void)=0;
+virtual bool ABeforeCalculate(void);
 // --------------------------
 };
 

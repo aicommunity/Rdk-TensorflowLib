@@ -12,14 +12,6 @@ namespace RDK {
 // Конструкторы и деструкторы
 // --------------------------
 UTfSqDetector::UTfSqDetector(void):
-    InputImage("InputImage",this),
-    UseDebugImage("UseDebugImage",this),
-    UseRelativeCoords("UseRelativeCoords",this),
-    OutputObjects("OutputObjects",this),
-    DebugImage("DebugImage",this),
-    OutputRects("OutputRects",this),
-    OutputClasses("OutputClasses",this),
-    OutputReliability("OutputReliability",this),
     ConfigPath("ConfigPath",this,&UTfSqDetector::SetConfigPath)
 {
     TfObject = &TfDetector;
@@ -93,80 +85,19 @@ bool UTfSqDetector::ATfBuild()
 }
 
 
-// Выполняет расчет этого объекта
-bool UTfSqDetector::ATfCalculate(void)
-{
-    if(!InputImage.IsConnected())
-        return true;
 
-    UBitmap &bmp = *InputImage;
-    if(!Detect(bmp, *OutputRects, *OutputClasses, *OutputReliability))
-        return true;
-
-    OutputObjects->Resize(OutputRects->GetRows(), 6);
-    for(int i=0;i<OutputRects->GetRows();i++)
-    {
-     double wm = (*UseRelativeCoords)?double(InputImage->GetWidth())/double(ExpectedWidth):(1);
-     double hm = (*UseRelativeCoords)?double(InputImage->GetHeight())/double(ExpectedHeight):(1);
-     (*OutputObjects)(i,0) = (int)((*OutputRects)(i,1)*wm);
-     (*OutputObjects)(i,1) = (int)((*OutputRects)(i,0)*hm);
-     (*OutputObjects)(i,2) = (int)((*OutputRects)(i,3)*wm);
-     (*OutputObjects)(i,3) = (int)((*OutputRects)(i,2)*hm);
-     (*OutputObjects)(i,4)=(*OutputReliability)(i,0);
-     (*OutputObjects)(i,5)=(*OutputClasses)(i,0);
-    }
-
-    if(UseDebugImage)
-    {
-     DebugImage->SetColorModel(ubmRGB24,false);
-     InputImage->ConvertTo(*DebugImage);
-
-     Graph.SetCanvas(DebugImage);
-
-     UAFont *class_font=GetFont("Tahoma",20);
-
-     for(int i=0; i<OutputRects->GetRows(); i++)
-     {
-        int xmin, ymin, xmax, ymax;
-
-        xmin = (int)((*OutputObjects)(i,0));
-        ymin = (int)((*OutputObjects)(i,1));
-        xmax = (int)((*OutputObjects)(i,2));
-        ymax = (int)((*OutputObjects)(i,3));
-
-
-
-        double conf = (*OutputReliability)(i,0);
-        int cls = (*OutputClasses)(i,0);
-
-
-  //      if(conf<0.2)
-  //        continue;
-
-        Graph.SetPenColor(0x00FF00);
-        Graph.SetPenWidth(3);
-        Graph.Rect(xmin, ymin, xmax, ymax);
-
-
-
-        std::stringstream ss;
-        ss<<cls<<"["<<conf<<"]";
-
-        if(class_font)
-        {
-          Graph.SetFont(class_font);
-          Graph.Text(ss.str(),xmin, ymax+3);
-        }
-     }
-    }
-
-    return true;
-
-}
 // --------------------------
 
 bool UTfSqDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatrix<int> &output_classes, MDMatrix<double> &reliabilities)
 {
+    if(!BuildDone)
+    {
+        DebugString=TfObject->GetDebugStr();
+        Ready=false;
+        LogMessageEx(RDK_EX_WARNING,__FUNCTION__,std::string(DebugString));
+        return false;
+    }
+
     if(!TfObject->SetInputDataCvMeth(bmp))
     {
         DebugString=TfObject->GetDebugStr();
@@ -191,10 +122,17 @@ bool UTfSqDetector::Detect(UBitmap &bmp, MDMatrix<double> &output_rects, MDMatri
 
     for(int y=0; y<num_detections; y++)
     {
-        for(int x=0; x<4;x++)
-        {
-            output_rects(y,x)=TfObject->GetOutput()[0].matrix<float>()(y,x);
-        }
+        // SqueezeDet находит положение на входном изображении фикс. размера
+        // поэтому надо масштабировать исходя из реального входного изображения
+        //Xmin Ymin Xmax Ymax
+        double wm = double(InputImage->GetWidth()) / double(ExpectedWidth);
+        double hm = double(InputImage->GetHeight())/ double(ExpectedHeight);
+
+        output_rects(y,0)=TfObject->GetOutput()[0].matrix<float>()(y,1)*wm;
+        output_rects(y,1)=TfObject->GetOutput()[0].matrix<float>()(y,0)*hm;
+        output_rects(y,2)=TfObject->GetOutput()[0].matrix<float>()(y,3)*wm;
+        output_rects(y,3)=TfObject->GetOutput()[0].matrix<float>()(y,2)*hm;
+
         reliabilities(y,0)=(TfObject->GetOutput()[2].tensor<float,1>()(y));
         output_classes(y,0)=int(TfObject->GetOutput()[1].tensor<long long int,1>()(y));
     }

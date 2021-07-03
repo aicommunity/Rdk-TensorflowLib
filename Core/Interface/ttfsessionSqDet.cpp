@@ -81,7 +81,7 @@ bool TTfSessionSqDet::SetConfigParams(const std::string& config_path)
     {
         return false;
     }
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 }
 
@@ -343,7 +343,7 @@ bool TTfSessionSqDet::CreatePostProcGraph()
          ErCode = TfErrorCode::BAD_STATUS;
          return false;
      }
-     ErCode=OK;
+     ErCode = TfErrorCode::OK;
      return true;
 
 }
@@ -363,7 +363,7 @@ bool TTfSessionSqDet::Run(void)
         return false;
 
 
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 }
 
@@ -377,7 +377,7 @@ bool TTfSessionSqDet::FilterPredicton()
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 
 }
@@ -395,7 +395,7 @@ bool TTfSessionSqDet::SetInputDataCvMeth(cv::Mat& image)
 
     if(!TTfSession::SetInputDataCvMeth(image))
         return false;
-    ErCode=OK;
+    ErCode = TfErrorCode::OK;
     return true;
 }
 
