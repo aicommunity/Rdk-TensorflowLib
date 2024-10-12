@@ -16,7 +16,7 @@ include($$PWD/../../../../Rdk/Build/Lib/Qt/RdkDefines.pri)
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += NOMINMAX
 
-VERSION = $$system(hg parents --template '{rev}')
+VERSION = 0 # $$system(hg parents --template '{rev}')
 DEFINES += RDK_LIB_CVS_REVISION=$$VERSION
 
 include($$PWD/../../../../Rdk/Build/Lib/Qt/RdkDefines.pri)
