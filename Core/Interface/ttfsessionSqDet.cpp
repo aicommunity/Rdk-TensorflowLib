@@ -33,10 +33,10 @@ bool TTfSessionSqDet::SetConfigParams(const std::string& config_path)
     {
         boost::property_tree::ptree root;
 
-        //Парсинг файла конфигурации
+        //РџР°СЂСЃРёРЅРі С„Р°Р№Р»Р° РєРѕРЅС„РёРіСѓСЂР°С†РёРё
         boost::property_tree::read_json(config_path, root);
 
-        // Считывание значений
+        // РЎС‡РёС‚С‹РІР°РЅРёРµ Р·РЅР°С‡РµРЅРёР№
         AnchorHeight    = root.get<int>("ANCHORS_HEIGHT", 0);
         AnchorWidth     = root.get<int>("ANCHORS_WIDTH", 0);
         AnchorPerGrid   = root.get<int>("ANCHOR_PER_GRID", 0);
@@ -87,17 +87,17 @@ bool TTfSessionSqDet::SetConfigParams(const std::string& config_path)
 
 bool TTfSessionSqDet::CreatePostProcGraph()
 {
-    ///Выходной вектор для преобразовани входного тензора
+    ///Р’С‹С…РѕРґРЅРѕР№ РІРµРєС‚РѕСЂ РґР»СЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРё РІС…РѕРґРЅРѕРіРѕ С‚РµРЅР·РѕСЂР°
     std::vector<tensorflow::Tensor> OutputForProc;
 
-    ///Граф для преобрзования входного тензора
+    ///Р“СЂР°С„ РґР»СЏ РїСЂРµРѕР±СЂР·РѕРІР°РЅРёСЏ РІС…РѕРґРЅРѕРіРѕ С‚РµРЅР·РѕСЂР°
     tensorflow::GraphDef GraphForProc;
 
-    //Создание графа вычислений для преобразования входной тензор в нужный вид
+    //РЎРѕР·РґР°РЅРёРµ РіСЂР°С„Р° РІС‹С‡РёСЃР»РµРЅРёР№ РґР»СЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РІС…РѕРґРЅРѕР№ С‚РµРЅР·РѕСЂ РІ РЅСѓР¶РЅС‹Р№ РІРёРґ
     tensorflow::Scope root = tensorflow::Scope::NewRootScope();
 
 
-    //Кусок графа для рассчёта AnchorBox и расчёт AnchorBox
+    //РљСѓСЃРѕРє РіСЂР°С„Р° РґР»СЏ СЂР°СЃСЃС‡С‘С‚Р° AnchorBox Рё СЂР°СЃС‡С‘С‚ AnchorBox
     tensorflow::Tensor anchor_seed(tensorflow::DataType::DT_FLOAT, tensorflow::TensorShape({AnchorPerGrid,2}));
     auto tmp_data = anchor_seed.flat<float>();
 
@@ -141,19 +141,19 @@ bool TTfSessionSqDet::CreatePostProcGraph()
        return false;
    }
 
-   //Определение параметров сессии
+   //РћРїСЂРµРґРµР»РµРЅРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ СЃРµСЃСЃРёРё
    tensorflow::SessionOptions opts;
    opts.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(0.6);
    opts.config.mutable_gpu_options()->set_allow_growth(true);
 
-    //Инициализация сессии
+    //РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃРµСЃСЃРёРё
     Status = tensorflow::NewSession(opts, &SessionForPostProc);
     if(!Status.ok())
     {
         ErCode = TfErrorCode::BAD_STATUS;
         return false;
     }
-    //Добавление графа в сессию
+    //Р”РѕР±Р°РІР»РµРЅРёРµ РіСЂР°С„Р° РІ СЃРµСЃСЃРёСЋ
     Status = SessionForPostProc->Create(GraphForProc);
     if(!Status.ok())
     {
@@ -182,7 +182,7 @@ bool TTfSessionSqDet::CreatePostProcGraph()
 
 
 
-    //Кусок графа постобработки
+    //РљСѓСЃРѕРє РіСЂР°С„Р° РїРѕСЃС‚РѕР±СЂР°Р±РѕС‚РєРё
     int n_outputs=NumberOfClasses+1+4;
     auto a = tensorflow::ops::Placeholder(root.WithOpName("input"), tensorflow::DataType::DT_FLOAT);
 
@@ -207,7 +207,7 @@ bool TTfSessionSqDet::CreatePostProcGraph()
     auto strided_3 = tensorflow::ops::StridedSlice(root, reshaped,{0,0,0,num_confidence_scores},{1,AnchorHeight,AnchorWidth,16848*8/(AnchorHeight*AnchorWidth)},{1,1,1,1});
     auto pred_box_delta = tensorflow::ops::Reshape(root.WithOpName("pred_box_delta"),tensorflow::ops::Reshape(root,strided_3,{1,Anchors,4}),{Anchors,4});
 
-    //Кусок графа для постобработки Boxes
+    //РљСѓСЃРѕРє РіСЂР°С„Р° РґР»СЏ РїРѕСЃС‚РѕР±СЂР°Р±РѕС‚РєРё Boxes
     auto anchors=tensorflow::ops::Const(root,AnchorBoxes);
 
     auto anchor_x = tensorflow::ops::StridedSlice(root, anchors,{0,0},{16848,1},{1,1});
@@ -298,9 +298,9 @@ bool TTfSessionSqDet::CreatePostProcGraph()
                                          tensorflow::ops::Minimum(root,tensorflow::ops::Fill(root,{16848,1},float(ImgHeight-1.0)),y2),
                                          tensorflow::ops::Fill(root,{16848,1},0.0f));
 
-    // формат [y1 x1 y2 x2]
+    // С„РѕСЂРјР°С‚ [y1 x1 y2 x2]
     auto det_boxes=tensorflow::ops::Concat(root.WithOpName("det_boxes"),std::initializer_list<tensorflow::Input>({ymins,xmins,ymaxs,xmaxs}),1);
-    //Конец преобработки бокса
+    //РљРѕРЅРµС† РїСЂРµРѕР±СЂР°Р±РѕС‚РєРё Р±РѕРєСЃР°
 
 
     //////////
@@ -313,7 +313,7 @@ bool TTfSessionSqDet::CreatePostProcGraph()
 
 
 
-    //подавление не максимумов и окончательный результа
+    //РїРѕРґР°РІР»РµРЅРёРµ РЅРµ РјР°РєСЃРёРјСѓРјРѕРІ Рё РѕРєРѕРЅС‡Р°С‚РµР»СЊРЅС‹Р№ СЂРµР·СѓР»СЊС‚Р°
     auto indeces = tensorflow::ops::NonMaxSuppressionV3(root.WithOpName("indeces"), det_boxes, det_probs,
                                                         MaxDetections,NMthreshold,ProbThreshold);
 
@@ -329,14 +329,14 @@ bool TTfSessionSqDet::CreatePostProcGraph()
         return false;
     }
 
-     //Инициализация сессии
+     //РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃРµСЃСЃРёРё
      Status = tensorflow::NewSession(tensorflow::SessionOptions(), &SessionForPostProc);
      if(!Status.ok())
      {
          ErCode = TfErrorCode::BAD_STATUS;
          return false;
      }
-     //Добавление графа в сессию
+     //Р”РѕР±Р°РІР»РµРЅРёРµ РіСЂР°С„Р° РІ СЃРµСЃСЃРёСЋ
      Status = SessionForPostProc->Create(GraphForProc);
      if(!Status.ok())
      {

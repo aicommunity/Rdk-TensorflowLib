@@ -9,55 +9,55 @@ namespace RDK {
 class UTfComponent: virtual public RDK::UNet
 {
 
-protected: // Параметры
+protected: // 
 
-///Путь к модели нейронной сети (pb модель)
-ULProperty<std::string,UTfComponent, ptPubParameter> PbModelPath;
+///     (pb )
+UProperty<std::string,UTfComponent, ptPubParameter> PbModelPath;
 
-///Имя входного узла нейронной сети
-ULProperty<std::string,UTfComponent, ptPubParameter> InputNodeName;
+///    
+UProperty<std::string,UTfComponent, ptPubParameter> InputNodeName;
 
-///Массив имён выходных узлов нейронной сети
-ULProperty<std::vector<std::string>,UTfComponent, ptPubParameter> OutputNodeName;
+///     
+UProperty<std::vector<std::string>,UTfComponent, ptPubParameter> OutputNodeName;
 
-///Делитель для данных изображения (нормализация)
-ULProperty<float,UTfComponent> ImgDiv;
+///    ()
+UProperty<float,UTfComponent, ptPubParameter> ImgDiv;
 
-///Вычитаемое из данных изображения (изображения)
-ULProperty<std::vector<float>,UTfComponent, ptPubParameter> ImgSub;
+///    ()
+UProperty<std::vector<float>,UTfComponent, ptPubParameter> ImgSub;
 
-///Флаг отвечающий за формат используемого изображения
-ULProperty<bool,UTfComponent, ptPubParameter> UseBGR;
+///     
+UProperty<bool,UTfComponent, ptPubParameter> UseBGR;
 
-///Доля использования памяти GPU
-ULProperty<double,UTfComponent, ptPubParameter> GpuFraction;
+///   GPU
+UProperty<double,UTfComponent, ptPubParameter> GpuFraction;
 
-///Объект для использования моделей нейронных сетей
+///     
 TTF::TTfSession* TfObject;
-protected: // Входы и выходы
+protected: //   
 
 
-protected: // Переменные состояния
-ULProperty<std::string,UTfComponent,ptPubState> DebugString;
+protected: //  
+UProperty<std::string,UTfComponent,ptPubState> DebugString;
 
-///Ожидаемые для сети параметры изображения
-ULProperty<int,UTfComponent,ptPubState> ExpectedHeight;
-ULProperty<int,UTfComponent,ptPubState> ExpectedWidth;
-ULProperty<int,UTfComponent,ptPubState> ExpectedChannels;
+///    
+UProperty<int,UTfComponent,ptPubState> ExpectedHeight;
+UProperty<int,UTfComponent,ptPubState> ExpectedWidth;
+UProperty<int,UTfComponent,ptPubState> ExpectedChannels;
 
-///Флаг, отвечающий за успешную сборку
+///,    
 bool BuildDone;
 
-public: // Методы
+public: // 
 // --------------------------
-// Конструкторы и деструкторы
+//   
 // --------------------------
 UTfComponent(void);
 virtual ~UTfComponent(void);
 // --------------------------
 
 // ---------------------
-// Методы управления параметрами
+//   
 // ---------------------
 // ---------------------
 
@@ -76,33 +76,33 @@ bool SetUseBGR(const bool &value);
 bool SetGpuFraction(const double &value);
 
 // ---------------------
-// Методы управления переменными состояния
+//    
 // ---------------------
 // ---------------------
 
 // --------------------------
 
 // --------------------------
-// Скрытые методы управления счетом
+//    
 // --------------------------
 protected:
-// Восстановление настроек по умолчанию и сброс процесса счета
+//        
 virtual bool ADefault(void);
 virtual bool ATfDefault(void)=0;
 
-// Обеспечивает сборку внутренней структуры объекта
-// после настройки параметров
-// Автоматически вызывает метод Reset() и выставляет Ready в true
-// в случае успешной сборки
+//     
+//   
+//    Reset()   Ready  true
+//    
 virtual bool ABuild(void);
 virtual bool ATfBuild(void)=0;
 
-// Сброс процесса счета без потери настроек
+//      
 virtual bool AReset(void);
 virtual bool ATfReset(void)=0;
 
 
-// Выполняет расчет этого объекта
+//    
 virtual bool ABeforeCalculate(void);
 // --------------------------
 };
