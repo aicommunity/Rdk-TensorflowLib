@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
     std::string labels = "/home/alexab/Try2/imagenet_slim_labels.txt";
 
-    //вывод в консоль вероятностей принадлежности к классу и имя классов
+    //РІС‹РІРѕРґ РІ РєРѕРЅСЃРѕР»СЊ РІРµСЂРѕСЏС‚РЅРѕСЃС‚РµР№ РїСЂРёРЅР°РґР»РµР¶РЅРѕСЃС‚Рё Рє РєР»Р°СЃСЃСѓ Рё РёРјСЏ РєР»Р°СЃСЃРѕРІ
     //tensorflow::Status print_status = PrintTopLabels(Result1, labels);
 
 

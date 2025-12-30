@@ -8,58 +8,58 @@ namespace RDK {
 
 class UTfSqDetector:  public UDetectorBase, public UTfComponent
 {
-protected: // Параметры
+protected: // 
 
 
-///Рисовать или не рисовать отладочные изображения
-ULProperty<std::string,UTfSqDetector, ptPubParameter> ConfigPath;
-protected: // Входы и выходы
+///     
+UProperty<std::string,UTfSqDetector, ptPubParameter> ConfigPath;
+protected: //   
 
 
 
-protected: // Переменные состояния
+protected: //  
 
 TTF::TTfSessionSqDet TfDetector;
 
-public: // Методы
+public: // 
 // --------------------------
-// Конструкторы и деструкторы
+//   
 // --------------------------
 UTfSqDetector(void);
 virtual ~UTfSqDetector(void);
 // --------------------------
 
 // ---------------------
-// Методы управления параметрами
+//   
 // ---------------------
 // ---------------------
 bool SetConfigPath(const std::string &value);
 // ---------------------
-// Методы управления переменными состояния
+//    
 // ---------------------
 // ---------------------
 
 // --------------------------
-// Системные методы управления объектом
+//    
 // --------------------------
-// Выделяет память для новой чистой копии объекта этого класса
+//         
 virtual UTfSqDetector* New(void);
 // --------------------------
 
 // --------------------------
-// Скрытые методы управления счетом
+//    
 // --------------------------
 protected:
-// Восстановление настроек по умолчанию и сброс процесса счета
+//        
 virtual bool ATfDefault(void);
 
-// Обеспечивает сборку внутренней структуры объекта
-// после настройки параметров
-// Автоматически вызывает метод Reset() и выставляет Ready в true
-// в случае успешной сборки
+//     
+//   
+//    Reset()   Ready  true
+//    
 virtual bool ATfBuild(void);
 
-// Сброс процесса счета без потери настроек
+//      
 virtual bool ATfReset(void);
 
 

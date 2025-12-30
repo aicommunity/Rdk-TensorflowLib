@@ -7,64 +7,64 @@ namespace RDK {
 
 class UTfClassifier: public UClassifierBase, public UTfComponent
 {
-protected: // Параметры
+protected: // 
 
 
-/// Сохранять в отладочную папку <config_path>/classification_result/номер класса
-/// по получившимся классам результаты классификации (для анализа/отладки)
-ULProperty<bool, UTfClassifier> SaveDebugResults;
+///     <config_path>/classification_result/ 
+///      ( /)
+UProperty<bool, UTfClassifier, ptPubParameter> SaveDebugResults;
 
-protected: // Входы и выходы
+protected: //   
 
 
-protected: // Переменные состояния
+protected: //  
 
 TTF::TTfSession TfClassifier;
 
-public: // Методы
+public: // 
 // --------------------------
-// Конструкторы и деструкторы
+//   
 // --------------------------
 UTfClassifier(void);
 virtual ~UTfClassifier(void);
 // --------------------------
 
 // ---------------------
-// Методы управления параметрами
+//   
 // ---------------------
 // ---------------------
 bool SetNumClasses(const int &value);
 // ---------------------
-// Методы управления переменными состояния
+//    
 // ---------------------
 // ---------------------
 
 // --------------------------
-// Системные методы управления объектом
+//    
 // --------------------------
-// Выделяет память для новой чистой копии объекта этого класса
+//         
 virtual UTfClassifier* New(void);
 // --------------------------
 
 // --------------------------
-// Скрытые методы управления счетом
+//    
 // --------------------------
 protected:
-// Восстановление настроек по умолчанию и сброс процесса счета
+//        
 virtual bool ATfDefault(void);
 
-// Обеспечивает сборку внутренней структуры объекта
-// после настройки параметров
-// Автоматически вызывает метод Reset() и выставляет Ready в true
-// в случае успешной сборки
+//     
+//   
+//    Reset()   Ready  true
+//    
 virtual bool ATfBuild(void);
 
-// Сброс процесса счета без потери настроек
+//      
 virtual bool ATfReset(void);
 
 
 // --------------------------
-/// Обрабатывает одно изображение
+///   
 virtual bool ClassifyBitmap(UBitmap &bmp, MDVector<double> &output_confidences, double conf_thresh, int &class_id, bool &is_classified);
 
 };
