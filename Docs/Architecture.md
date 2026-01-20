@@ -10,10 +10,10 @@ Rdk-TensorflowLib предоставляет компонентный интер
 
 ```mermaid
 flowchart TB
-    UTfComponent[UTfComponent<br/>Базовый компонент]
-    UTfClassifier[UTfClassifier<br/>Классификатор]
-    UTfDetector[UTfDetector<br/>Детектор]
-    UTfSqDetector[UTfSqDetector<br/>SqueezeDet детектор]
+    UTfComponent["UTfComponent (Базовый_компонент)"]
+    UTfClassifier["UTfClassifier (Классификатор)"]
+    UTfDetector["UTfDetector (Детектор)"]
+    UTfSqDetector["UTfSqDetector (SqueezeDet)"]
     TfSession[TensorFlow Session]
     
     UTfComponent --> UTfClassifier
@@ -61,6 +61,23 @@ flowchart TB
 Rdk-TensorflowLib provides a component interface for working with TensorFlow.
 
 ### Library Structure
+
+```mermaid
+flowchart TB
+    UTfComponent_EN["UTfComponent (Base)"]
+    UTfClassifier_EN["UTfClassifier (Classifier)"]
+    UTfDetector_EN["UTfDetector (Detector)"]
+    UTfSqDetector_EN["UTfSqDetector (SqueezeDet)"]
+    TfSession_EN["TensorFlow Session"]
+    
+    UTfComponent_EN --> UTfClassifier_EN
+    UTfComponent_EN --> UTfDetector_EN
+    UTfComponent_EN --> UTfSqDetector_EN
+    UTfClassifier_EN --> TfSession_EN
+    UTfDetector_EN --> TfSession_EN
+```
+
+The library wraps TensorFlow runtime into Rdk components. A typical flow is: load model → prepare input tensors → run session → map output tensors into component output properties.
 
 ### Main Modules
 
