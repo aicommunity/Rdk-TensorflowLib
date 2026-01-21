@@ -25,27 +25,67 @@ flowchart TB
 
 ### Основные модули
 
-#### Базовый компонент
+#### Базовые компоненты
 
-- **UTfComponent** - базовый компонент для работы с TensorFlow
+- **UTfComponent** - базовый компонент для всех TensorFlow компонентов
 
-#### Классификация
+#### Классификаторы
 
-- **UTfClassifier** - классификатор изображений на базе TensorFlow
+- **UTfClassifier** - классификатор на основе TensorFlow моделей
 
-#### Детекция
+#### Детекторы
 
-- **UTfDetector** - детектор объектов на базе TensorFlow
-- **UTfSqDetector** - детектор SqueezeDet
+- **UTfDetector** - детектор объектов на основе TensorFlow
+- **UTfSqDetector** - детектор SqueezeDet на основе TensorFlow
 
 #### Сессии TensorFlow
 
-- **ttfsession** - управление сессиями TensorFlow
+- **ttfsession** - сессия TensorFlow для выполнения графов вычислений
+- **ttfsessionSqDet** - сессия для SqueezeDet моделей
+
+#### Интерфейсы
+
+- **Interface/label_image.h** - интерфейс для классификации изображений
+
+### Ключевые классы
+
+#### TensorflowLib
+
+Главный класс библиотеки.
+
+Библиотека загружается условно:
+
+```cpp
+#ifdef RDK_USE_TENSORFLOW
+libs_list.push_back(&RDK::TensorflowLib);
+#endif
+```
 
 ### Зависимости
 
-- `rdk.static.qt` - ядро Rdk
-- TensorFlow - библиотека TensorFlow
+- **rdk.static.qt** - ядро Rdk
+- **TensorFlow** (C API) - библиотека TensorFlow
+- Заголовочные файлы TensorFlow
+
+### Особенности
+
+- Прямая интеграция с TensorFlow C API
+- Загрузка и выполнение предобученных моделей
+- Работа с сессиями TensorFlow
+- Поддержка различных архитектур (включая SqueezeDet)
+
+### Примеры использования
+
+#### TensorFlow детектор
+
+```cpp
+#ifdef RDK_USE_TENSORFLOW
+// Создание TensorFlow детектора
+UTfDetector* detector = storage->CreateComponent<UTfDetector>();
+// Загрузка модели TensorFlow
+// Детекция объектов
+#endif
+```
 
 ### См. также
 
@@ -81,27 +121,67 @@ The library wraps TensorFlow runtime into Rdk components. A typical flow is: loa
 
 ### Main Modules
 
-#### Base Component
+#### Base Components
 
-- **UTfComponent** - base component for TensorFlow operations
+- **UTfComponent** - base component for all TensorFlow components
 
-#### Classification
+#### Classifiers
 
-- **UTfClassifier** - TensorFlow-based image classifier
+- **UTfClassifier** - classifier based on TensorFlow models
 
-#### Detection
+#### Detectors
 
-- **UTfDetector** - TensorFlow-based object detector
-- **UTfSqDetector** - SqueezeDet detector
+- **UTfDetector** - object detector based on TensorFlow
+- **UTfSqDetector** - SqueezeDet detector based on TensorFlow
 
 #### TensorFlow Sessions
 
-- **ttfsession** - TensorFlow session management
+- **ttfsession** - TensorFlow session for executing computation graphs
+- **ttfsessionSqDet** - session for SqueezeDet models
+
+#### Interfaces
+
+- **Interface/label_image.h** - interface for image classification
+
+### Key Classes
+
+#### TensorflowLib
+
+Main library class.
+
+The library is loaded conditionally:
+
+```cpp
+#ifdef RDK_USE_TENSORFLOW
+libs_list.push_back(&RDK::TensorflowLib);
+#endif
+```
 
 ### Dependencies
 
-- `rdk.static.qt` - Rdk core
-- TensorFlow - TensorFlow library
+- **rdk.static.qt** - Rdk core
+- **TensorFlow** (C API) - TensorFlow library
+- TensorFlow header files
+
+### Features
+
+- Direct integration with TensorFlow C API
+- Loading and executing pre-trained models
+- Working with TensorFlow sessions
+- Support for various architectures (including SqueezeDet)
+
+### Usage Examples
+
+#### TensorFlow Detector
+
+```cpp
+#ifdef RDK_USE_TENSORFLOW
+// Create TensorFlow detector
+UTfDetector* detector = storage->CreateComponent<UTfDetector>();
+// Load TensorFlow model
+// Object detection
+#endif
+```
 
 ### See Also
 
