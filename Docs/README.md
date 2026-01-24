@@ -13,6 +13,20 @@
 - Детекции объектов
 - Работы с TensorFlow сессиями
 
+### Быстрый старт
+
+#### Классификация изображения с TensorFlow
+
+```cpp
+// Создание классификатора
+auto classifier = storage->CreateComponent<UTfClassifier>("Classifier");
+classifier->ModelPath = "model.pb";
+classifier->InputImage.AttachTo(&source->OutputImage);
+classifier->Build();
+classifier->Calculate();
+auto classLabel = classifier->ClassLabel();
+```
+
 ### Связь с корневой документацией
 
 Для обзорной информации см. корневую документацию проекта:
@@ -23,6 +37,7 @@
 - [Architecture.md](Architecture.md) - архитектура библиотеки
 - [Usage-Examples.md](Usage-Examples.md) - примеры использования
 - [API-Overview.md](API-Overview.md) - обзор API
+- [Component-Catalog.md](Component-Catalog.md) - каталог компонентов
 
 ---
 
@@ -39,6 +54,20 @@ The library includes components for:
 - Object detection
 - TensorFlow session operations
 
+### Quick Start
+
+#### Image Classification with TensorFlow
+
+```cpp
+// Create classifier
+auto classifier = storage->CreateComponent<UTfClassifier>("Classifier");
+classifier->ModelPath = "model.pb";
+classifier->InputImage.AttachTo(&source->OutputImage);
+classifier->Build();
+classifier->Calculate();
+auto classLabel = classifier->ClassLabel();
+```
+
 ### Link to Root Documentation
 
 For overview information see root project documentation:
@@ -49,3 +78,4 @@ For overview information see root project documentation:
 - [Architecture.md](Architecture.md) - library architecture
 - [Usage-Examples.md](Usage-Examples.md) - usage examples
 - [API-Overview.md](API-Overview.md) - API overview
+- [Component-Catalog.md](Component-Catalog.md) - component catalog
